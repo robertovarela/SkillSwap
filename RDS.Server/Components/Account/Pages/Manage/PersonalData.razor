@@ -1,0 +1,61 @@
+﻿@page "/Account/Manage/PersonalData"
+@layout AccountLayout
+
+@inject IdentityUserAccessor UserAccessor
+
+<PageTitle>Dados Pessoais</PageTitle>
+
+<MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">Dados Pessoais</MudText>
+
+<StatusMessage />
+
+<div class="mt-4">
+    <MudText Typo="Typo.body1" Class="mb-4">
+        Sua conta contém dados pessoais que você nos forneceu. Esta página permite que você faça o download ou exclua esses dados.
+    </MudText>
+
+    <MudAlert Severity="Severity.Warning" Class="mb-4">
+        <strong>A exclusão destes dados irá remover permanentemente sua conta, e isto não poderá ser recuperado.</strong>
+    </MudAlert>
+
+    <MudStack Spacing="2">
+        <form action="@LinkToDownloadPersonalData" method="post">
+            <AntiforgeryToken/>
+            <MudStaticButton ButtonType="@ButtonType.Submit"
+                             Variant="Variant.Filled"
+                             Color="Color.Primary"
+                             FullWidth="true"
+                             FormAction="FormAction.Submit">
+                Baixar Meus Dados
+            </MudStaticButton>
+        </form>
+
+        <MudButton Href="Account/Manage/DeletePersonalData"
+                   Variant="Variant.Filled"
+                   Color="Color.Error"
+                   FullWidth="true">
+            Excluir Conta e Dados
+        </MudButton>
+    </MudStack>
+</div>
+
+<MudDivider Class="my-4"/>
+
+<MudButton Variant="Variant.Text"
+           Color="Color.Default"
+           StartIcon="@Icons.Material.Filled.ArrowBack"
+           Href="/Account/Manage"
+           FullWidth="true">
+    Voltar ao Perfil
+</MudButton>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = null!;
+    private const string LinkToDownloadPersonalData = "Account/Manage/DownloadPersonalData";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _ = await UserAccessor.GetRequiredUserAsync(HttpContext);
+    }
+}

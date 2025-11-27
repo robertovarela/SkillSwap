@@ -1,0 +1,118 @@
+﻿@inherits LayoutComponentBase
+@inject ThemeService ThemeService
+@using RDS.Server.Services
+@implements IDisposable
+
+<MudThemeProvider @ref="_mudThemeProvider"
+                  Theme="ConfigurationTheme.Theme"
+                  IsDarkMode="@ThemeService.IsDarkMode"/>
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+<MudLayout>
+    
+    <TimeZoneInitializer />
+
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="@DrawerToggle"/>
+        <MudSpacer/>
+
+        <MudText Typo="Typo.h5" Style="white-space: nowrap;">
+            <span class="logo-text">SKILLSWAP</span><span class="logo-dot"></span>
+        </MudText>
+
+        <MudSpacer/>
+
+        @*<LoginDisplay/>*@
+        <ThemeToggleButton ShowSwitch="false" Class="ma-4 ml-auto" />
+    </MudAppBar>
+
+    <MudDrawer id="nav-drawer"
+               @bind-Open="_drawerOpen"
+               ClipMode="DrawerClipMode.Always"
+               Elevation="@ConfigurationWeb.ElevationSidebar"
+               Variant="DrawerVariant.Responsive"
+               Width="200px">
+        <NavMenu/>
+    </MudDrawer>
+
+    <MudMainContent
+        Class="mud-container-body">
+        <MudPaper Elevation="@ConfigurationWeb.ElevationPaperBody" Class="mud-paper-body">
+            <div class="div-body" style="background-color: @BackgroundColor;">
+                @Body
+            </div>
+        </MudPaper>
+    </MudMainContent>
+
+    <MudAppBar Bottom="true" Elevation="1" Style="height: 35px;">
+        <MudSpacer/>
+        <MudText>&copy; 2025 SkillSwap</MudText>
+        <MudSpacer/>
+    </MudAppBar>
+
+</MudLayout>
+
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    #region Properties
+
+    private bool _drawerOpen = true;
+    private MudThemeProvider? _mudThemeProvider;
+
+    // Propriedades computed para facilitar o uso
+    private MudTheme Theme => ConfigurationTheme.Theme;
+
+    private string BackgroundColor => ThemeService.IsDarkMode
+        ? Theme.PaletteDark.Surface.Value
+        : Theme.PaletteLight.Surface.Value;
+
+    #endregion Properties
+
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChangedHandler;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+
+            // Verifica se o provider foi inicializado para watch system preference
+            if (_mudThemeProvider != null)
+            {
+                await _mudThemeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private void OnThemeChangedHandler()
+    {
+        StateHasChanged();
+    }
+
+    private async Task OnSystemPreferenceChanged(bool newValue)
+    {
+        await ThemeService.SetThemeAsync(newValue);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeChangedHandler;
+    }
+}

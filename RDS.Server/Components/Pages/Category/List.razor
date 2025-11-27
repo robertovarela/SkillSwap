@@ -1,0 +1,348 @@
+﻿@page "/Categories"
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.Category
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Requests
+@using RDS.Core.Utils
+@using RDS.Server.Components.Shared
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject IJSRuntime Js
+@inject IUserContextService UserContext
+@inject NavigationManager NavigationManager
+@inject ICategoryService CategoryService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDialogService DialogService
+@implements IDisposable
+
+<title>@Title</title>
+
+<AuthorizeView Roles="administrador">
+    <Authorized>
+        <MudContainer Class="mt-4" MaxWidth="MaxWidth.Medium">
+
+            <div class="d-flex justify-space-between align-center mb-6 gap-4 flex-wrap">
+                <div>
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.h4" Class="mb-0">@Title</MudText>
+                        <MudChip T="string"
+                                 Text="@($"{PagedResult.TotalCount}")"
+                                 Color="Color.Info"
+                                 Size="Size.Small"
+                                 Variant="Variant.Filled"
+                                 Class="mt-1"/>
+                    </div>
+                    <MudText Typo="Typo.body1" Class="text-secondary-theme mt-1">
+                        Gerencie as categorias de serviços da plataforma
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Medium"
+                           StartIcon="Icons.Material.Filled.Add"
+                           OnClick="@CreateEntity">
+                    Nova Categoria
+                </MudButton>
+            </div>
+
+            <MudPaper Class="pa-3 mb-6 mx-auto" Elevation="2" Width="90%">
+                <MudGrid Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.Center">
+                    <MudItem xs="10">
+                        <MudTextField T="string"
+                                      id="categorySearch"
+                                      Placeholder="Buscar categorias..."
+                                      Value="@Filter.Search"
+                                      Immediate="true"
+                                      Label="Buscar"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="Icons.Material.Filled.Search"/>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            <AlertDefault
+                ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+                ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+                NavigateToInstructions="UserContext.NavigateToInstructions"
+                NavigateToLogin="UserContext.NavigateToLogin"/>
+
+            @if (_showContent)
+            {
+                @if (_isLoading)
+                {
+                    <div class="d-flex justify-center pa-8">
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+                    </div>
+                }
+                else if (PagedResult.Items.Any())
+                {
+                    <MudGrid Justify="Justify.Center">
+                        @foreach (var entity in PagedResult.Items)
+                        {
+                            <MudItem xs="11">
+                                <MudCard Class="mud-height-full">
+                                    <MudCardContent>
+                                        <div class="d-flex justify-space-between align-start mb-3">
+                                            <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                                                @(entity.Name.Length > 0 ? entity.Name.Substring(0, 1).ToUpper() : "C")
+                                            </MudAvatar>
+                                            <MudChip T="string"
+                                                     Text="@($"#{entity.Id}")"
+                                                     Size="Size.Small"
+                                                     Variant="Variant.Text"
+                                                     Color="Color.Default"/>
+                                        </div>
+
+                                        <MudText Typo="Typo.h6"
+                                                 Class="mb-2"
+                                                 Style="min-height: auto;"> @entity.Name
+                                        </MudText>
+
+                                        <MudText Typo="Typo.body2"
+                                                 Class="mb-4 text-secondary-theme">
+                                            @(string.IsNullOrEmpty(entity.Description) ? "Sem descrição disponível" : entity.Description)
+                                        </MudText>
+                                    </MudCardContent>
+
+                                    <MudCardActions Class="d-flex justify-end flex-wrap gap-2 pa-4 pt-0">
+                                        <MudButton Color="Color.Default"
+                                                   Variant="Variant.Outlined"
+                                                   StartIcon="@Icons.Material.Filled.Edit"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => EditEntity(entity.Id))">
+                                            EDITAR
+                                        </MudButton>
+                                        <MudButton Color="Color.Secondary"
+                                                   Variant="Variant.Outlined"
+                                                   StartIcon="@Icons.Material.Filled.Delete"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => ShowDeleteConfirmation(entity))">
+                                            EXCLUIR
+                                        </MudButton>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+
+                    <div class="d-flex justify-center mt-6">
+                        <MudPagination Count="@TotalPages"
+                                       SelectedChanged="GoToPage"
+                                       Selected="Filter.PageNumber"
+                                       Color="Color.Primary"
+                                       Size="Size.Large"
+                                       ShowFirstButton="true"
+                                       ShowLastButton="true"/>
+                    </div>
+                }
+                else
+                {
+                    <MudPaper Class="pa-8 text-center" Elevation="0">
+                        <MudIcon Icon="Icons.Material.Outlined.Category"
+                                 Size="Size.Large"
+                                 Color="Color.Secondary"
+                                 Class="mb-4"/>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            Nenhuma categoria encontrada
+                        </MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4 text-secondary-theme">
+                            @(string.IsNullOrWhiteSpace(Filter.Search)
+                                ? "Comece criando sua primeira categoria de serviço."
+                                : "Tente ajustar os filtros de busca.")
+                        </MudText>
+                        @if (string.IsNullOrWhiteSpace(Filter.Search))
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="Icons.Material.Filled.Add"
+                                       OnClick="@CreateEntity">
+                                Criar Primeira Categoria
+                            </MudButton>
+                        }
+                    </MudPaper>
+                }
+            }
+        </MudContainer>
+    </Authorized>
+    <NotAuthorized>
+        <AlertNotAdmin/>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    //private long _userId;
+    //private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+
+    private bool _isAuthorized;
+
+    private const string Title = "Categorias";
+
+    private FilterParams Filter { get; set; } = new() { PageSize = ConfigurationServer.PageSize, PageNumber = 1 };
+    private PaginatedResult<CategoryDto> PagedResult { get; set; } = new();
+    private int TotalPages => (int)Math.Ceiling((double)(PagedResult.TotalCount) / Filter.PageSize);
+    private bool _isLoading = true;
+
+    private DotNetObjectReference<List>? _dotNetRef;
+    private bool _disposed;
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        //_userId = context.UserId;
+        //_professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = false;
+        _showContent = true;
+
+        // Verifica si el usuario tiene el rol de administrador
+        _isAuthorized = await CheckAuthorization.CheckUserAuthorizationAsync(
+            AuthenticationStateProvider,
+            UserRoles.Administrador);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await DefaultInitializationAsync();
+            // Solo ejecuta las acciones si está autorizado
+            if (_isAuthorized)
+            {
+                await LoadDataAsync();
+                await Task.Delay(50);
+
+                try
+                {
+                    _dotNetRef = DotNetObjectReference.Create(this);
+                    await Js.InvokeVoidAsync("debounceInput", _dotNetRef, "categorySearch", ConfigurationServer.DebounceDelay);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al inicializar debounce: {ex.Message}");
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            PagedResult = await CategoryService.GetPagedAsync(Filter);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar entidades: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    [JSInvokable("OnDebouncedInput")]
+    public async Task OnDebouncedInput(string searchText)
+    {
+        if (_disposed) return;
+        Filter.Search = searchText;
+        Filter.PageNumber = 1;
+
+        await LoadDataAsync();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _dotNetRef?.Dispose();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages || page == Filter.PageNumber) return;
+        Filter.PageNumber = page;
+        await LoadDataAsync();
+    }
+
+    private async Task<bool> CanPerformAdminAction()
+    {
+        return await CheckAuthorization.CheckUserAuthorizationAsync(
+            AuthenticationStateProvider,
+            UserRoles.Administrador);
+    }
+
+    private async Task EditEntity(long entityId)
+    {
+        if (await CanPerformAdminAction())
+        {
+            NavigationManager.NavigateTo($"{AppRoutes.CategoriesEdit.Replace("{id}", entityId.ToString())}");
+        }
+    }
+
+    private async Task CreateEntity()
+    {
+        if (await CanPerformAdminAction())
+        {
+            NavigationManager.NavigateTo($"{AppRoutes.CategoriesCreate}");
+        }
+    }
+
+    private async Task ShowDeleteConfirmation(CategoryDto entity)
+    {
+        if (!await CanPerformAdminAction()) return;
+
+        if (entity.HasAssociatedServices)
+        {
+            var alertParams = new DialogParameters<AlertDialog>
+            {
+                { x => x.ContentText, "Esta categoria não pode ser excluída pois está associada a um ou mais serviços." },
+                { x => x.ButtonText, "OK" },
+                { x => x.Color, Color.Error }
+            };
+            var alertOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.ShowAsync<AlertDialog>("Exclusão não permitida", alertParams, alertOptions);
+        }
+        else
+        {
+            var parameters = new DialogParameters<ConfirmDeleteDialog>
+            {
+                { x => x.ContentText, $"Deseja realmente excluir a categoria '{entity.Name}'?" },
+                { x => x.ButtonText, "Excluir" },
+                { x => x.Color, Color.Error }
+            };
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Confirmar Exclusão", parameters, options);
+            var result = await dialog.Result;
+
+            if (result is { Canceled: false })
+            {
+                await ConfirmDelete(entity.Id);
+            }
+        }
+    }
+
+    private async Task ConfirmDelete(long entityId)
+    {
+        try
+        {
+            await CategoryService.DeleteAsync(entityId);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao excluir categoria: {ex.Message}");
+            // Aqui você pode adicionar uma notificação de erro usando MudSnackbar se desejar
+        }
+    }
+}

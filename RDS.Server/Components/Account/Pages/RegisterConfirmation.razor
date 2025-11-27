@@ -1,0 +1,81 @@
+﻿@page "/Account/RegisterConfirmation"
+@layout AccountLayout
+
+@using System.Text
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using RDS.Core.Models
+
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Confirmação de registro</PageTitle>
+
+<div class="text-center">
+    <MudIcon Icon="@Icons.Material.Filled.MarkEmailRead" Color="Color.Success" Size="Size.Large" Class="mb-4"/>
+
+    <MudText Typo="Typo.h5" GutterBottom="true">Confirmação de Registro</MudText>
+
+    <StatusMessage Message="@_statusMessage"/>
+
+    <MudAlert Severity="Severity.Info" Class="my-4 text-left">
+        Uma mensagem de confirmação foi enviada para o seu e-mail. Por favor, verifique sua caixa de entrada (e spam) para ativar sua conta.
+    </MudAlert>
+
+    @if (_emailConfirmationLink is not null)
+    {
+        <MudPaper Class="pa-4" Elevation="0" variant="Variant.Outlined">
+            <MudText Typo="Typo.caption" GutterBottom="true">
+                Como este app está em modo de desenvolvimento, você pode confirmar sua conta clicando no link abaixo:
+            </MudText>
+            <MudLink Href="@_emailConfirmationLink" Typo="Typo.body2">Clique aqui para confirmar sua conta</MudLink>
+        </MudPaper>
+    }
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Primary"
+               Size="Size.Large"
+               Href="/Account/Login"
+               Class="mt-6">
+        Voltar para o Login
+    </MudButton>
+</div>
+
+@code {
+    private string? _emailConfirmationLink;
+    private string? _statusMessage;
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    [SupplyParameterFromQuery] private string? Email { get; set; }
+
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Email is null)
+        {
+            RedirectManager.RedirectTo("");
+            return;
+        }
+
+        var user = await UserManager.FindByEmailAsync(Email);
+        if (user is null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+            _statusMessage = "Erro ao encontrar usuário para o e-mail especificado";
+        }
+        else
+        {
+            // Once you add a real email sender, you should remove this code that lets you confirm the account
+            var userId = await UserManager.GetUserIdAsync(user);
+            var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            _emailConfirmationLink = NavigationManager.GetUriWithQueryParameters(
+                NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+                new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+        }
+    }
+
+}

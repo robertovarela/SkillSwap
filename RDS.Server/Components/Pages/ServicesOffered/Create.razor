@@ -1,0 +1,200 @@
+﻿@page "/ServicesOffered/Create"
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.Category
+@using RDS.Core.Dtos.ServiceOffered
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Utils
+
+@inject IUserContextService UserContext
+@inject IServiceOfferedService Service
+@inject ICategoryService CategoryService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject CultureHelper CultureHelper
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Medium">
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Descreva o serviço que você deseja oferecer na plataforma
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="Icons.Material.Filled.ArrowBack"
+                   OnClick="@NavigateBack">
+            Voltar
+        </MudButton>
+    </div>
+    
+    <AlertDefault
+        ShowProfessionalNotFoundAlert = "_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert = "_showCurrentUserNotFoundAlert"
+        NavigateToInstructions = "UserContext.NavigateToInstructions"
+        NavigateToLogin = "UserContext.NavigateToLogin"
+    />
+    
+    @if (_showContent)
+    {
+        <!-- Form Card -->
+        <MudPaper Class="pa-6" Elevation="3">
+            <EditForm Model="@_entity" OnValidSubmit="HandleValidSubmit" Context="editContext">
+                <FluentValidationValidator/>
+                
+                <MudText Typo="Typo.h6" Class="mb-4">
+                    <MudIcon Icon="Icons.Material.Filled.Work" Class="mr-2"/>
+                    Detalhes do Serviço
+                </MudText>
+
+                <MudGrid>
+                    <!-- Title Field -->
+                    <MudItem xs="12">
+                        <MudTextField T="string"
+                                      @bind-Value="_entity.Title"
+                                      Label="Título do Serviço"
+                                      Placeholder="Ex: Criação de Logotipo Profissional"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="O título é obrigatório."
+                                      MaxLength="100"
+                                      Counter="100"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="Icons.Material.Filled.Title"/>
+                        <ValidationMessage For="@(() => _entity.Title)"/>
+                    </MudItem>
+
+                    <!-- Description Field -->
+                    <MudItem xs="12" Class="mt-4">
+                        <MudTextField T="string"
+                                      @bind-Value="_entity.Description"
+                                      Label="Descrição Detalhada"
+                                      Placeholder="Descreva o que está incluído no serviço, prazos, etc."
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="A descrição do serviço é obrigatória."
+                                      Lines="5"
+                                      MaxLength="1000"
+                                      Counter="1000"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="Icons.Material.Filled.Description"/>
+                        <ValidationMessage For="@(() => _entity.Description)"/>
+                    </MudItem>
+
+                    <!-- Category & Price Fields -->
+                    <MudItem xs="12" sm="6" Class="mt-4">
+                        <MudSelect T="long" @bind-Value="_entity.CategoryId" Label="Área de Atuação" Variant="Variant.Outlined" Required="true" RequiredError="Selecione uma área de atuação." Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Category">
+                            <MudSelectItem T="long" Value="0" Disabled="true">Selecione uma área de atuação</MudSelectItem>
+                            @foreach (var category in _categories)
+                            {
+                                <MudSelectItem T="long" Value="@category.Id">@category.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <ValidationMessage For="@(() => _entity.CategoryId)"/>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6" Class="mt-4">
+                        <MudNumericField @bind-Value="_entity.Price"
+                                         Label="Valor"
+                                         Variant="Variant.Outlined"
+                                         Required="true"
+                                         RequiredError="O valor é obrigatório."
+                                         Format="C2"
+                                         Culture="@CultureHelper.SkillDollarCulture"
+                                         HelperText="O valor será cobrado em Skill Dólares (SD)"
+                                         Adornment="Adornment.Start"
+                                         AdornmentText=""/>
+                        <ValidationMessage For="@(() => _entity.Price)"/>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-space-between align-center mt-8">
+                    <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="@NavigateBack" Size="Size.Large" StartIcon="Icons.Material.Filled.Cancel">Cancelar</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Submit" Size="Size.Large" StartIcon="Icons.Material.Filled.Save" Disabled="@_isSubmitting">
+                        @if (_isSubmitting)
+                        {
+                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true"/>
+                            <span>Salvando...</span>
+                        }
+                        else
+                        {
+                            <span>Criar Serviço</span>
+                        }
+                    </MudButton>
+                </div>
+            </EditForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    //private long _userId;
+    private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+    private bool _isSubmitting;
+
+    private const string Title = "Novo Serviço Oferecido";
+
+    private readonly ServiceOfferedCreateDto _entity = new();
+    private IEnumerable<CategoryDto> _categories = [];
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await DefaultInitializationAsync();
+        if (_showContent)
+        {
+            await LoadDataAsync();
+        }
+        _entity.ProfessionalProfileId = _professionalId;
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        //_userId = context.UserId;
+        _professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = context.ShowProfessionalNotFoundAlert;
+        _showContent = context.ShowContent;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _categories = await CategoryService.GetAllAsync();
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            _isSubmitting = true;
+            await Service.AddAsync(_entity);
+            Snackbar.Add("Serviço criado com sucesso!", Severity.Success);
+            NavigateBack();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao criar serviço: {ex.Message}");
+            Snackbar.Add("Ocorreu um erro ao criar o serviço.", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void NavigateBack()
+        => NavigationManager.NavigateTo($"{AppRoutes.ServicesOffered}");
+}

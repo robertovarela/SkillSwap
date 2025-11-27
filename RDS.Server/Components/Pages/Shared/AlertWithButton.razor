@@ -1,0 +1,44 @@
+﻿@if (Show)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @Message
+        <button type="button" class="btn save-button" @onclick="OnButtonClick">@ButtonText</button>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Se true, exibe o alerta.</summary>
+    [Parameter] public bool Show { get; set; }
+
+    /// <summary>Texto (ou markup) do corpo do alerta.</summary>
+    [Parameter] public string Message { get; set; } = string.Empty;
+
+    /// <summary>Texto do botão de ação.</summary>
+    [Parameter] public string ButtonText { get; set; } = "OK";
+
+    /// <summary>Callback disparado ao clicar no botão.</summary>
+    [Parameter] public EventCallback OnButtonClick { get; set; }
+}
+
+
+@*
+Exemplo de uso:
+
+    <AlertWithButton
+        Show="_showProfessionalNotFoundAlert"
+        Message="Perfil profissional não encontrado. Por favor, complete seu cadastro antes de criar um serviço."
+        ButtonText="Instruções"
+        OnButtonClick="NavigateToInstructions" />
+
+    <AlertWithButton
+        Show="_showCurrentUserNotFoundAlert"
+        Message="Usuário atual não encontrado. Por favor, faça login novamente."
+        ButtonText="Login"
+        OnButtonClick="NavigateToLogin" />
+*@

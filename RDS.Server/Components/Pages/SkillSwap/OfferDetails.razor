@@ -1,0 +1,387 @@
+﻿@page "/SkillSwap/Details/Offer/{id:long}/{ProfessionalAId:long}/{ProfessionalBId:long}"
+@inject IUserContextService UserContext
+@inject ISkillSwapService ServiceSkillSwap
+@inject IServiceOfferedService ServiceOfferedService
+@inject NavigationManager NavigationManager
+@inject IProfessionalProfileService ProfessionalProfileService
+@inject IMessageService MessageService
+@inject UserTimeZoneService UserTimeZoneService
+@inject ISkillSwapNotificationService NotificationService
+@inject CultureHelper CultureHelper
+
+@attribute [Authorize]
+@rendermode InteractiveServer
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.Message
+@using RDS.Core.Dtos.ProfessionalProfile
+@using RDS.Core.Dtos.ServiceOffered
+@using RDS.Core.Dtos.SkillSwapRequest
+@using RDS.Core.Enums
+@using RDS.Core.Libraries.ExtensionMethods
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Utils
+@implements IDisposable
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Large">
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Veja os detalhes da proposta de troca de serviço
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="Icons.Material.Filled.ArrowBack"
+                   OnClick="@NavigateBack">
+            Voltar
+        </MudButton>
+    </div>
+
+    <AlertDefault
+        ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+        NavigateToInstructions="UserContext.NavigateToInstructions"
+        NavigateToLogin="UserContext.NavigateToLogin"/>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+        </div>
+    }
+    else if (_showContent)
+    {
+        <MudAlert Severity="@GetStatusSeverity(_entitySkillSwap!.Status)" Icon="@GetStatusIcon(_entitySkillSwap.Status)"
+                  Class="mb-4">
+            <strong>Situação: @_entitySkillSwap.Status.GetEnumDisplayName()</strong>
+        </MudAlert>
+
+        <MudGrid Spacing="4">
+            <!-- Requested Service (A) -->
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="3" Class="mud-height-full">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">
+                                @(_isProposer ? "Serviço Desejado" : "Seu Serviço (Solicitado)")
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent Class="d-flex flex-column">
+                        <div class="d-flex align-center mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Title" Color="Color.Primary" Class="mr-3"/>
+                            <div>
+                                <MudText>@_serviceOfferedB!.Title</MudText>
+                            </div>
+                        </div>
+                        <div class="d-flex align-start my-2 flex-grow-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary" Class="mr-3 mt-1"/>
+                            <div>
+                                <MudText Typo="Typo.body2">@_serviceOfferedB!.Description</MudText>
+                            </div>
+                        </div>
+                        <div class="d-flex align-center mt-2">
+                            <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Primary" Class="mr-3"/>
+                            <div>
+                                <MudText>@_serviceOfferedB!.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudText>
+                            </div>
+                        </div>
+                        <div class="d-flex align-center mt-2">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" Class="mr-3"/>
+                            <MudText Typo="Typo.caption">De: @_profileB?.ProfessionalName</MudText>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Offered Service (B) -->
+            <MudItem xs="12" md="6">
+                @if (_entitySkillSwap.ServiceAId.HasValue && _serviceOfferedA is not null)
+                {
+                    <MudCard Elevation="3" Class="mud-height-full">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">
+                                    @(_isProposer ? "Sua Oferta (Serviço)" : "Oferta Recebida (Serviço)")
+                                </MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Class="d-flex flex-column">
+                            <div class="d-flex align-center mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Title" Color="Color.Primary" Class="mr-3"/>
+                                <div>
+                                    <MudText>@_serviceOfferedA.Title</MudText>
+                                </div>
+                            </div>
+                            <div class="d-flex align-start my-2 flex-grow-1">
+                                <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Primary"
+                                         Class="mr-3 mt-1"/>
+                                <div>
+                                    <MudText Typo="Typo.body2">@_serviceOfferedA.Description</MudText>
+                                </div>
+                            </div>
+                            <div class="d-flex align-center mt-2">
+                                <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Primary" Class="mr-3"/>
+                                <div>
+                                    <MudText>@_serviceOfferedA.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudText>
+                                </div>
+                            </div>
+                            <div class="d-flex align-center mt-2">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" Class="mr-3"/>
+                                <MudText Typo="Typo.caption">De: @_profileA?.ProfessionalName</MudText>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                }
+                else if (_entitySkillSwap.OfferedAmount.HasValue)
+                {
+                    <MudCard Elevation="3" Class="mud-height-full d-flex flex-column justify-center align-center">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">
+                                    @(_isProposer ? "Sua Oferta (SD$)" : "Oferta Recebida (SD$)")
+                                </MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Class="text-center">
+                            <MudIcon Icon="Icons.Material.Filled.MonetizationOn" Color="Color.Success"
+                                     Style="font-size: 48px;" Class="mb-2"/>
+                            <MudText Typo="Typo.h4"
+                                     Style="font-weight: 700;">@_entitySkillSwap.OfferedAmount.Value.ToString("C2", CultureHelper.SkillDollarCulture)</MudText>
+                            <MudText Typo="Typo.caption" Class="mt-4">Oferecido
+                                por: @_profileA?.ProfessionalName</MudText>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudItem>
+        </MudGrid>
+
+        <!-- Chat Section -->
+        <MudPaper Elevation="2" Class="pa-4 mt-6">
+            <MudText Typo="Typo.h6" GutterBottom="true">Histórico da Proposta</MudText>
+            <div id="chat-container" style="max-height: 400px; overflow-y: auto;" class="d-flex flex-column-reverse">
+                <MudList T="string" Class="mud-width-full">
+                    @foreach (var message in _messages)
+                    {
+                        var isMine = message.SenderId == _userId;
+                        <div class="d-flex @(isMine ? "justify-end" : "justify-start") my-2">
+                            <MudPaper Elevation="@(isMine ? 2 : 1)" Class="pa-3"
+                                      Style="@($"max-width: 75%; background-color: {(isMine ? "var(--mud-palette-primary)" : "var(--mud-palette-surface)")}")">
+                                <MudText Typo="Typo.body2">@message.Content</MudText>
+                                <MudText Typo="Typo.caption" Align="@(isMine ? Align.Right : Align.Left)" Class="mt-1"
+                                         Style="@($"color: {(isMine ? "var(--mud-palette-primary-text)" : "var(--mud-palette-text-secondary)")}")">
+                                    @UserTimeZoneService.ConvertToUserTimeZone(message.SentAt).ToString("dd/MM HH:mm")
+                                </MudText>
+                            </MudPaper>
+                        </div>
+                    }
+                </MudList>
+            </div>
+
+            <div class="d-flex align-center mt-4">
+                <MudTextField @bind-Value="_newMessageContent"
+                              Label="Digite sua mensagem"
+                              Variant="Variant.Outlined"
+                              Class="flex-grow-1"
+                              Lines="1"
+                              OnKeyDown="@HandleChatKeyDown"/>
+                <MudIconButton Icon="@Icons.Material.Filled.Send"
+                               Color="Color.Primary"
+                               OnClick="@SendMessageAsync"
+                               Disabled="string.IsNullOrWhiteSpace(_newMessageContent)"
+                               Class="ml-2"/>
+            </div>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private long _userId;
+    private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+    private bool _isLoading = true;
+    private bool _isProposer;
+    private List<MessageDto> _messages = new();
+    private string _newMessageContent = "";
+
+    [Parameter] public long Id { get; set; }
+    [Parameter] public long ProfessionalAId { get; set; }
+    [Parameter] public long ProfessionalBId { get; set; }
+    private const string Title = "Detalhes da Proposta";
+
+    private SkillSwapRequestDto? _entitySkillSwap = new();
+    private ServiceOfferedDto? _serviceOfferedA = new();
+    private ServiceOfferedDto? _serviceOfferedB = new();
+    private ProfessionalProfileDto? _profileA;
+    private ProfessionalProfileDto? _profileB;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await DefaultInitializationAsync();
+            await LoadDataAsync();
+
+            // Inscreve-se para receber notificações em tempo real de novas mensagens
+            NotificationService.OnMessageSent += HandleMessageReceived;
+            // Inscreve-se para receber notificações de atualização de status
+            NotificationService.OnSkillSwapUpdated += HandleSkillSwapUpdated;
+
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        _userId = context.UserId;
+        _professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = context.ShowProfessionalNotFoundAlert;
+        _showContent = context.ShowContent;
+
+        // Validação de segurança: verifica se o profissional logado tem permissão para acessar esta proposta
+        if (_professionalId != ProfessionalAId && _professionalId != ProfessionalBId)
+        {
+            _showProfessionalNotFoundAlert = true;
+            _showContent = false;
+            return;
+        }
+
+        // Determina a perspectiva do usuário
+        _isProposer = _professionalId == ProfessionalAId;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        // Busca o SkillSwap primeiro
+        _entitySkillSwap = await ServiceSkillSwap.GetByIdAsync(Id, _professionalId);
+        if (_entitySkillSwap == null)
+        {
+            _showProfessionalNotFoundAlert = true;
+            _showContent = false;
+            return;
+        }
+
+        // Executa as queries sequencialmente para evitar problemas de concorrência no DbContext
+        _serviceOfferedB = await ServiceOfferedService.GetByIdAsync(_entitySkillSwap.ServiceBId);
+        _serviceOfferedA = _entitySkillSwap.ServiceAId.HasValue
+            ? await ServiceOfferedService.GetByIdAsync(_entitySkillSwap.ServiceAId!.Value)
+            : null;
+        _profileA = await ProfessionalProfileService.GetByIdAsync(_entitySkillSwap.ProfessionalAId);
+        _profileB = await ProfessionalProfileService.GetByIdAsync(_entitySkillSwap.ProfessionalBId);
+        _messages = (await MessageService.GetMessagesByProposalIdAsync(Id, _userId)).ToList();
+    }
+
+    private Severity GetStatusSeverity(StatusSwapRequest status) => status switch
+    {
+        StatusSwapRequest.Pending => Severity.Warning,
+        StatusSwapRequest.Accepted => Severity.Success,
+        StatusSwapRequest.Rejected => Severity.Error,
+        StatusSwapRequest.Completed => Severity.Info,
+        StatusSwapRequest.Cancelled => Severity.Normal,
+        _ => Severity.Info
+    };
+
+    private string GetStatusIcon(StatusSwapRequest status) => status switch
+    {
+        StatusSwapRequest.Pending => Icons.Material.Filled.HourglassEmpty,
+        StatusSwapRequest.Accepted => Icons.Material.Filled.CheckCircle,
+        StatusSwapRequest.Rejected => Icons.Material.Filled.Cancel,
+        StatusSwapRequest.Completed => Icons.Material.Filled.DoneAll,
+        StatusSwapRequest.Cancelled => Icons.Material.Filled.Block,
+        _ => Icons.Material.Filled.Help
+    };
+
+    private async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_newMessageContent))
+            return;
+
+        var messageDto = new MessageCreateDto
+        {
+            SenderId = _userId,
+            ReceiverId = _isProposer ? _profileB!.UserId : _profileA!.UserId,
+            Content = _newMessageContent,
+            SkillSwapRequestId = Id
+        };
+
+        await MessageService.AddAsync(messageDto);
+        _newMessageContent = "";
+
+        // Recarrega as mensagens
+        _messages = (await MessageService.GetMessagesByProposalIdAsync(Id, _userId)).ToList();
+        StateHasChanged();
+    }
+
+    private async Task HandleChatKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessageAsync();
+        }
+    }
+
+    // Método chamado quando uma nova mensagem é enviada em tempo real
+    private async void HandleMessageReceived(long skillSwapId)
+    {
+        try
+        {
+            // Verifica se a mensagem é para esta proposta
+            if (skillSwapId == Id)
+            {
+                // Recarrega as mensagens
+                await InvokeAsync(async () =>
+                {
+                    _messages = (await MessageService.GetMessagesByProposalIdAsync(Id, _userId)).ToList();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Erro ao processar mensagem recebida: {e.Message}");
+        }
+    }
+
+    // Método chamado quando o status da proposta é atualizado em tempo real
+    private async void HandleSkillSwapUpdated(long skillSwapId)
+    {
+        try
+        {
+            // Verifica se é esta proposta que foi atualizada
+            if (skillSwapId == Id)
+            {
+                // Recarrega o status
+                await InvokeAsync(async () =>
+                {
+                    _entitySkillSwap = await ServiceSkillSwap.GetByIdAsync(Id, _professionalId);
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Erro ao processar atualização de SkillSwap: {e.Message}");
+        }
+    }
+
+    private void NavigateBack()
+        => NavigationManager.NavigateTo($"{AppRoutes.SkillSwapRequestsListProposal}");
+
+    public void Dispose()
+    {
+        // Remove as inscrições dos eventos para evitar memory leak
+        NotificationService.OnMessageSent -= HandleMessageReceived;
+        NotificationService.OnSkillSwapUpdated -= HandleSkillSwapUpdated;
+    }
+
+}

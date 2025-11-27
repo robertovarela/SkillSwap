@@ -1,0 +1,42 @@
+﻿@page "/Start"
+
+@rendermode InteractiveServer
+
+<PageTitle>RDS</PageTitle>
+
+<TimeZoneInitializer/>
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-items-center justify-content-center"
+              Style="height: 84vh;
+              min-height: 70vh;
+              max-height: 90vh;
+              overflow-y: auto;
+              padding-top: 5px;
+              padding-bottom: 1px;">
+    <MudPaper Class="pa-8" Elevation="@ConfigurationWeb.ElevationPaperPrincipal" Width="100%" MaxWidth="700px"
+              Style="border-radius: 12px;">
+
+        <MudText Typo="Typo.h3" Align="Align.Center" Class="mb-4 d-none d-md-block" Style="white-space: nowrap;">
+            <span class="logo-text logo-text-large">SKILLSWAP</span><span class="logo-dot-large"></span>
+        </MudText>
+        <MudText Align="Align.Center" Class="mb-4 d-block d-md-none" Style="white-space: nowrap;">
+            <span class="logo-text">SKILLSWAP</span><span class="logo-dot"></span>
+        </MudText>
+
+        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4 d-none d-md-block">
+            A sua plataforma de soluções
+        </MudText>
+        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4 d-block d-md-none">
+            A sua plataforma de soluções
+        </MudText>
+
+        <MudText Typo="Typo.h6" Align="Align.Center" Class="mb-4 responsive-text">
+            <p class="mb-4" style="font-size: 1.15rem;">
+                SkillSwap é uma plataforma inovadora que conecta
+                pessoas em busca de aprendizado e troca de habilidades.
+                Aqui, você pode compartilhar seu conhecimento e aprender com os outros, criando uma comunidade
+                colaborativa e enriquecedora.
+            </p>
+        </MudText>
+
+    </MudPaper>
+</MudContainer>

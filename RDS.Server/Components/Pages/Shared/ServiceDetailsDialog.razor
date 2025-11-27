@@ -1,0 +1,87 @@
+﻿@using RDS.Core.Dtos.ServiceOffered
+@using RDS.Core.Utils
+
+@inject CultureHelper CultureHelper
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Work" Class="mr-2"/>
+            Detalhes do Serviço
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (Service is not null)
+        {
+            <MudList T="string" clickable="false">
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Title" IconColor="Color.Primary">
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.caption">Título</MudText>
+                        <MudText>@Service.Title</MudText>
+                    </div>
+                </MudListItem>
+
+                <MudDivider/>
+
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Description" IconColor="Color.Primary">
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.caption">Descrição</MudText>
+                        <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@Service.Description</MudText>
+                    </div>
+                </MudListItem>
+
+                <MudDivider/>
+
+                <MudListItem T="string" Icon="@Icons.Material.Filled.AttachMoney" IconColor="Color.Primary">
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.caption">Valor</MudText>
+                        <MudText>@Service.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudText>
+                    </div>
+                </MudListItem>
+
+                @if (!string.IsNullOrWhiteSpace(Service.CategoryName))
+                {
+                    <MudDivider/>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Category" IconColor="Color.Primary">
+                        <div class="d-flex flex-column">
+                            <MudText Typo="Typo.caption">Área de atuação</MudText>
+                            <MudText>@Service.CategoryName</MudText>
+                            @if (!string.IsNullOrWhiteSpace(Service.CategoryName))
+                            {
+                                <MudText Typo="Typo.caption" Class="text-secondary-theme mt-1">@Service.CategoryDescription</MudText>
+                            }
+                        </div>
+                    </MudListItem>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(Service.ProfessionalName))
+                {
+                    <MudDivider/>
+                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person" IconColor="Color.Primary">
+                        <div class="d-flex flex-column">
+                            <MudText Typo="Typo.caption">Profissional</MudText>
+                            <MudText>@Service.ProfessionalName</MudText>
+                        </div>
+                    </MudListItem>
+                }
+
+                <MudDivider/>
+
+                <MudListItem T="string" Icon="@Icons.Material.Filled.Event" IconColor="Color.Primary">
+                    <div class="d-flex flex-column">
+                        <MudText Typo="Typo.caption">Publicado em</MudText>
+                        <MudText>@Service.CreatedAt.ToString("dd/MM/yyyy 'às' HH:mm")</MudText>
+                    </div>
+                </MudListItem>
+            </MudList>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => MudDialog.Close(DialogResult.Ok(true)))">Fechar</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+    [Parameter] public ServiceOfferedDto? Service { get; set; }
+}

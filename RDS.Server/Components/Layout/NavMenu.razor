@@ -1,0 +1,120 @@
+﻿@using RDS.Core.Libraries.Services
+@implements IDisposable
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject IUserContextService UserContext
+@inject IProfessionalProfileService ProfessionalProfileService
+
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Início</MudNavLink>
+    <AuthorizeView Context="contextPrincipal">
+        <Authorized>
+            <MudNavLink href="ProfessionalProfiles" Match="NavLinkMatch.Prefix"
+                        Icon="@Icons.Material.Filled.AccountCircle">
+                Perfil
+            </MudNavLink>
+
+            @if (HasProfessionalProfile)
+            {
+                <MudNavLink href="ProfessionalProfiles/AddBalance" Match="NavLinkMatch.Prefix"
+                            Icon="@Icons.Material.Filled.AddCard">
+                    Adicionar Saldo
+                </MudNavLink>
+
+                <AuthorizeView Roles="administrador">
+                    <Authorized>
+                        <MudNavLink href="Categories" Match="NavLinkMatch.Prefix"
+                                    Icon="@Icons.Material.Filled.Category">
+                            Categorias
+                        </MudNavLink>
+
+                        <MudNavLink href="Admin/Dashboard" Match="NavLinkMatch.Prefix"
+                                    Icon="@Icons.Material.Filled.Dashboard">
+                            Dashboard
+                        </MudNavLink>
+                    </Authorized>
+                </AuthorizeView>
+
+                <MudNavLink href="ServicesOffered" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Handyman">
+                    Serviços
+                </MudNavLink>
+
+                <MudNavLink href="SkillSwap" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Sync">
+                    SkillSwap
+                </MudNavLink>
+            }
+
+            <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">
+                @_userDisplayName
+            </MudNavLink>
+
+            <form action="@LinkToLogout" method="post">
+                <AntiforgeryToken/>
+                <input type="hidden" name="ReturnUrl" value="@_currentUrl"/>
+                <button type="submit" class="mud-nav-link mud-ripple">
+                    <MudIcon Icon="@Icons.Material.Filled.Logout" Color="Color.Info" Class="mr-3"></MudIcon>
+                    Sair
+                </button>
+            </form>
+        </Authorized>
+        <NotAuthorized>
+            <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">
+                Register
+            </MudNavLink>
+            <MudNavLink Href="Account/Login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Password">Login
+            </MudNavLink>
+        </NotAuthorized>
+    </AuthorizeView>
+</MudNavMenu>
+
+@code {
+    private string? _currentUrl;
+    private bool HasProfessionalProfile => _professionalId > 0;
+    private long _professionalId;
+    private string _userDisplayName = "Carregando...";
+    private const string LinkToLogout = "Account/Logout";
+
+    [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+        await SetUserDisplayName();
+    }
+
+    private async Task SetUserDisplayName()
+    {
+        var userContext = await UserContext.InitializeUserContextAsync();
+        _professionalId = userContext.ProfessionalId;
+
+        if (HasProfessionalProfile)
+        {
+            var profile = await ProfessionalProfileService.GetByIdAsync(_professionalId);
+            _userDisplayName = profile?.ProfessionalName?.Split(' ')[0] ?? "Perfil";
+        }
+        else
+        {
+            var authState = await AuthenticationStateTask;
+            var user = authState.User;
+            _userDisplayName = user.Identity?.Name?.Split('@')[0] ?? "Usuário";
+        }
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        _currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        // Usar InvokeAsync para despachar o trabalho assíncrono de forma segura
+        InvokeAsync(async () =>
+        {
+            await SetUserDisplayName();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

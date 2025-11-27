@@ -1,0 +1,120 @@
+﻿@page "/Admin/Dashboard"
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.SkillSwapRequest
+@using RDS.Core.Enums
+@using RDS.Core.Libraries.Services
+
+@attribute [Authorize(Roles = "administrador")]
+@rendermode InteractiveServer
+
+@inject ISkillSwapService SkillSwapService
+
+<PageTitle>Dashboard de Propostas</PageTitle>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.ExtraLarge">
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">Dashboard de Propostas</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Monitore e gerencie todas as trocas de habilidades na plataforma.
+            </MudText>
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+        </div>
+    }
+    else
+    {
+        <!-- KPI Section -->
+        <MudGrid Spacing="4" Class="mb-6 mud-height-full">
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="pa-4 d-flex flex-column align-center mud-height-full" Elevation="3">
+                    <MudText Typo="Typo.h4" Style="font-weight: 700;">@_pendingCount</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-secondary-theme">Pendentes</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="pa-4 d-flex flex-column align-center mud-height-full" Elevation="3">
+                    <MudText Typo="Typo.h4" Style="font-weight: 700;">@_acceptedCount</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-secondary-theme">Em Andamento</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="pa-4 d-flex flex-column align-center mud-height-full" Elevation="3">
+                    <MudText Typo="Typo.h4" Style="font-weight: 700;">@_completedCount</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-secondary-theme">Concluídas</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="pa-4 d-flex flex-column align-center mud-height-full" Elevation="3">
+                    <MudText Typo="Typo.h4" Style="font-weight: 700;">@_cancelledCount</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-secondary-theme">Canceladas</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Class="pa-4 d-flex flex-column align-center mud-height-full" Elevation="3">
+                    <MudText Typo="Typo.h4" Style="font-weight: 700;">@_rejectedCount</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="text-secondary-theme">Rejeitadas</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Tabs Section -->
+        <MudTabs Elevation="2" 
+                 Rounded="true" 
+                 PanelClass="pa-0" 
+                 AlwaysShowScrollButtons="true"
+                 Class="gapped-tabs">
+            <MudTabPanel Text="Pendentes" BadgeData="@_pendingCount" BadgeColor="Color.Warning">
+                <ProposalTable Proposals="_proposals.Where(p => p.Status == StatusSwapRequest.Pending).ToList()"/>
+            </MudTabPanel>
+            <MudTabPanel Text="Aceitas" BadgeData="@_acceptedCount" BadgeColor="Color.Success">
+                <ProposalTable Proposals="_proposals.Where(p => p.Status == StatusSwapRequest.Accepted || p.Status == StatusSwapRequest.CompletionPendingA || p.Status == StatusSwapRequest.CompletionPendingB).ToList()"/>
+            </MudTabPanel>
+            <MudTabPanel Text="Concluídas" BadgeData="@_completedCount" BadgeColor="Color.Info">
+                <ProposalTable Proposals="_proposals.Where(p => p.Status == StatusSwapRequest.Completed).ToList()"/>
+            </MudTabPanel>
+            <MudTabPanel Text="Canceladas" BadgeData="@_cancelledCount" BadgeColor="Color.Error">
+                <ProposalTable Proposals="_proposals.Where(p => p.Status == StatusSwapRequest.Cancelled).ToList()"/>
+            </MudTabPanel>
+            <MudTabPanel Text="Rejeitadas" BadgeData="@_rejectedCount" BadgeColor="Color.Tertiary">
+                <ProposalTable Proposals="_proposals.Where(p => p.Status == StatusSwapRequest.Rejected).ToList()"/>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    private bool _isLoading = true;
+    private List<SkillSwapRequestDto> _proposals = new();
+
+    private int _pendingCount;
+    private int _acceptedCount;
+    private int _completedCount;
+    private int _cancelledCount;
+    private int _rejectedCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        _proposals = (await SkillSwapService.GetAllAdminAsync()).ToList();
+
+        _pendingCount = _proposals.Count(p => p.Status == StatusSwapRequest.Pending);
+        _acceptedCount = _proposals.Count(p => p.Status == StatusSwapRequest.Accepted || p.Status == StatusSwapRequest.CompletionPendingA || p.Status == StatusSwapRequest.CompletionPendingB);
+        _completedCount = _proposals.Count(p => p.Status == StatusSwapRequest.Completed);
+        _cancelledCount = _proposals.Count(p => p.Status == StatusSwapRequest.Cancelled);
+        _rejectedCount = _proposals.Count(p => p.Status == StatusSwapRequest.Rejected);
+
+        _isLoading = false;
+    }
+}

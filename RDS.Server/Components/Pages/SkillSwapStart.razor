@@ -1,0 +1,275 @@
+﻿@page "/"
+@layout StartLayout
+@inject AuthenticationStateProvider AuthProvider
+
+<!--suppress ALL -->
+<PageTitle>SkillSwap - Início</PageTitle>
+
+<style>
+    .section-container {
+        padding: 80px 24px;
+    }
+
+    .section-container-shadow {
+        padding: 80px 24px;
+        box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-section {
+        min-height: 90vh;
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/images/hero-background.png');
+        background-size: cover;
+        background-position: center;
+    }
+
+    .appbar-outer {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .landing-appbar-container {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 8px;
+        background-color: rgba(var(--mud-palette-surface-rgb), 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 6px;
+    }
+
+    /* botão de tema com espaçamento à direita quando presente */
+    .appbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<MudLayout>
+    <MudAppBar Elevation="1" Fixed="true" Class="appbar-outer px-md-4">
+        <div class="landing-appbar-container">
+            <MudText Typo="Typo.h6" Style="white-space: nowrap;">
+                <span class="logo-text">&nbsp;&nbsp;SKILLSWAP</span><span class="logo-dot"></span>
+            </MudText>
+            <MudSpacer/>
+
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <MudButton Href="#how-it-works" Variant="Variant.Text" Color="Color.Primary" Class="font-weight-bold">
+                    Como Funciona
+                </MudButton>
+                <MudButton Href="#benefits" Variant="Variant.Text" Color="Color.Primary" Class="font-weight-bold">
+                    Vantagens
+                </MudButton>
+            </MudHidden>
+
+            <div class="appbar-actions">
+                <ThemeToggleButton ShowSwitch="false" ButtonColor="Color.Primary"/>
+
+                @if (_isAuthenticated)
+                {
+                    <MudButton Href="/start" Variant="Variant.Filled" Color="Color.Primary" Class="ml-2">
+                        Ir para App
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton Href="/start" Variant="Variant.Text" Color="Color.Primary" Class="ml-2">
+                        Entrar
+                    </MudButton>
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <MudButton Href="/Account/Register" Variant="Variant.Outlined" Color="Color.Primary"
+                                   Class="ml-2">
+                            Cadastrar
+                        </MudButton>
+                    </MudHidden>
+                }
+            </div>
+            &nbsp;&nbsp;
+        </div>
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="pa-0">
+
+            <!-- Hero Section -->
+            <MudPaper Square="true" Elevation="0" Class="hero-section d-flex  justify-center">
+                <MudContainer MaxWidth="MaxWidth.Large" Class="text-center">
+                    <!-- Title for larger screens -->
+                    <MudText Typo="Typo.h2" GutterBottom="true" Style="font-weight: 700;"
+                             Class="text-primary-color-theme d-none d-sm-block">
+                        Onde habilidades se encontram.
+                    </MudText>
+                    <!-- Title for smaller screens (xs) -->
+                    <MudText Typo="Typo.h4" GutterBottom="true" Style="font-weight: 700;"
+                             Class="text-primary-color-theme d-block d-sm-none">
+                        Onde habilidades se encontram.
+                    </MudText>
+                    
+                    <MudText Typo="Typo.h5" Class="mb-8 mx-auto"
+                             Style="font-weight: 300; max-width: 700px; color: whitesmoke">
+                        Conecte-se a uma comunidade de profissionais, ensine suas habilidades e aprenda novas
+                        competências sem gastar dinheiro.
+                    </MudText>
+                    <MudButton Href="/Account/Register"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large"
+                               EndIcon="Icons.Material.Filled.ArrowForward"
+                               Style="height: 56px;">
+                        Crie sua Conta Gratuita
+                    </MudButton>
+                </MudContainer>
+            </MudPaper>
+
+            <!-- How it Works Section -->
+            <MudPaper id="how-it-works" Square="true" Elevation="0" Class="section-container"
+                      Style="background: var(--mud-palette-background-grey);">
+                <MudContainer MaxWidth="MaxWidth.Large">
+                    <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary" GutterBottom="true"
+                             Style="font-weight: 600;">Como Funciona?
+                    </MudText>
+                    <MudGrid Class="mt-8">
+                        <MudItem xs="12" md="4">
+                            <MudPaper Elevation="0" Class="pa-4 text-center mud-height-full section-container-shadow">
+                                <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Color="Color.Primary"
+                                         Style="font-size: 48px;" Class="mb-4"/>
+                                <MudText Typo="Typo.h5" GutterBottom="true" Style="min-height: 85px;">1. Crie seu
+                                    Perfil
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="text-secondary-theme">Apresente-se à comunidade e
+                                    liste as habilidades que você domina e os serviços que pode oferecer.
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudPaper Elevation="0" Class="pa-4 text-center mud-height-full section-container-shadow">
+                                <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Color="Color.Primary"
+                                         Style="font-size: 48px;" Class="mb-4"/>
+                                <MudText Typo="Typo.h5" GutterBottom="true" Style="min-height: 85px;">2. Explore e
+                                    Ofereça
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="text-secondary-theme">Navegue pelos serviços que
+                                    outros oferecem e proponha uma troca usando uma de suas habilidades.
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudPaper Elevation="0" Class="pa-4 text-center mud-height-full section-container-shadow">
+                                <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Primary"
+                                         Style="font-size: 48px;" Class="mb-4"/>
+                                <MudText Typo="Typo.h5" GutterBottom="true" Style="min-height: 85px;">3. Conecte-se e
+                                    Evolua
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="text-secondary-theme">Converse, combine os detalhes e
+                                    conclua a troca. Aprenda algo novo e ajude alguém a crescer.
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+            </MudPaper>
+
+            <!-- Benefits Section -->
+            <MudPaper id="benefits" Square="true" Elevation="0" Class="section-container section-container-shadow">
+                <MudContainer MaxWidth="MaxWidth.Large">
+                    <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true" Style="font-weight: 600;">Vantagens
+                        da Troca
+                    </MudText>
+                    <MudGrid Class="mt-8">
+                        <MudItem xs="12" sm="12" md="4">
+                            <MudCard Elevation="3" Class="mud-height-full">
+                                <MudCardHeader Style="min-height: 80px;">
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Economia Inteligente</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2">Aprenda novas competências sem investimento financeiro.
+                                        Sua habilidade é a sua moeda.
+                                    </MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Elevation="3" Class="mud-height-full">
+                                <MudCardHeader Style="min-height: 80px;">
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Networking de Valor</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2">Construa uma rede de contatos genuína, baseada na
+                                        colaboração e no crescimento mútuo.
+                                    </MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudCard Elevation="3" Class="mud-height-full">
+                                <MudCardHeader Style="min-height: 80px;">
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Desenvolvimento Contínuo</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body2">Mantenha-se atualizado e relevante no mercado, ensinando
+                                        o que você sabe e aprendendo o que você precisa.
+                                    </MudText>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudContainer>
+            </MudPaper>
+
+            <!-- Final CTA Section -->
+            <MudPaper id="signup" Square="true" Elevation="0" Class="section-container"
+                      Style="background: var(--mud-palette-background-grey);">
+                <MudContainer MaxWidth="MaxWidth.Large" Class="text-center">
+                    <MudText Typo="Typo.h3" GutterBottom="true" Color="Color.Tertiary" Style="font-weight: 600;">Pronto
+                        para Evoluir?
+                    </MudText>
+                    <MudText Typo="Typo.body1" Color="Color.Tertiary" Class="mb-6 mx-auto" Style="max-width: 600px;">
+                        Junte-se a centenas de profissionais que estão transformando conhecimento em oportunidade.
+                    </MudText>
+                    <MudButton Href="/Account/Register"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Large"
+                               Style="height: 56px;">
+                        Junte-se à Comunidade
+                    </MudButton>
+                </MudContainer>
+            </MudPaper>
+
+            <!-- Footer -->
+            <MudPaper id="contact" Square="true" Elevation="0" Class="py-2 section-container-shadow">
+                <MudContainer MaxWidth="MaxWidth.Large" Class="text-center d-flex flex-column align-center">
+                    <MudText Typo="Typo.body1" Align="Align.Center">© @DateTime.Now.Year SkillSwap - Todos os direitos
+                        reservados
+                    </MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center" Class="mt-2">
+                        Contato:
+                        <MudLink Href="mailto:contato@skillswap.mysoftwares.com.br" Color="Color.Primary">SkillSwap
+                        </MudLink>
+                    </MudText>
+                </MudContainer>
+            </MudPaper>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _isAuthenticated;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+    }
+
+}

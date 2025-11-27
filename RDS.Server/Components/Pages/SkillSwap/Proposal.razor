@@ -1,0 +1,255 @@
+﻿@page "/SkillSwap/Proposal/{Id:long}"
+@using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.Message
+@using RDS.Core.Dtos.ProfessionalProfile
+@using RDS.Core.Dtos.ServiceOffered
+@using RDS.Core.Dtos.SkillSwapRequest
+@using RDS.Core.Enums
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Utils
+
+@inject IUserContextService UserContext
+@inject ISkillSwapService ServiceSkillSwap
+@inject IServiceOfferedService ServiceOfferedService
+@inject IProfessionalProfileService ProfessionalProfileService
+@inject IMessageService MessageService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject CultureHelper CultureHelper
+
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Large">
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Selecione um de seus serviços para propor em troca
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="Icons.Material.Filled.ArrowBack"
+                   OnClick="@NavigateBack">
+            Cancelar
+        </MudButton>
+    </div>
+
+    <AlertDefault
+        ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+        NavigateToInstructions="UserContext.NavigateToInstructions"
+        NavigateToLogin="UserContext.NavigateToLogin"
+    />
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+        </div>
+    }
+    else if (_showContent)
+    {
+        <MudGrid Spacing="4">
+            <!-- Service to Request -->
+            <MudItem xs="12" md="6">
+                <MudCard Elevation="3">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Serviço Desejado</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudList T="string" clickable="false">
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Title">
+                                <MudText>@_serviceOfferedA.Title</MudText>
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.Description">
+                                <MudText Typo="Typo.body2">@_serviceOfferedA.Description</MudText>
+                            </MudListItem>
+                            <MudListItem T="string" Icon="@Icons.Material.Filled.AttachMoney">
+                                <MudText>@_serviceOfferedA.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudText>
+                            </MudListItem>
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Service to Offer -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-6 mud-height-full">
+                    <EditForm Model="@_serviceOfferedB" OnValidSubmit="HandleValidSubmit">
+                        <FluentValidationValidator/>
+                        <ValidationSummary/>
+                        <MudText Typo="Typo.h6" Class="mb-4">Sua Oferta</MudText>
+
+                        @if (!_services.Any())
+                        {
+                            <MudAlert Severity="Severity.Warning">Você não possui serviços cadastrados para oferecer em
+                                troca.
+                            </MudAlert>
+                        }
+                        else
+                        {
+                            <MudSelect T="long" @bind-Value="_serviceOfferedB.Id" Label="Selecione um de seus serviços"
+                                       Variant="Variant.Outlined" Required="true"
+                                       RequiredError="Você precisa selecionar um serviço para oferecer.">
+                                <MudSelectItem T="long" Value="0" Disabled="true">Selecione um serviço</MudSelectItem>
+                                @foreach (var service in _services)
+                                {
+                                    <MudSelectItem T="long"
+                                                   Value="@service.Id">@service.Title — @service.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <ValidationMessage For="@(() => _serviceOfferedB.Id)"/>
+                        }
+
+                        <div class="d-flex justify-end mt-8">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       ButtonType="ButtonType.Submit"
+                                       Size="Size.Large"
+                                       StartIcon="@Icons.Material.Filled.Send"
+                                       Disabled="@(_isSubmitting || !_services.Any() || _serviceOfferedB.Id == 0)">
+                                @if (_isSubmitting)
+                                {
+                                    <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true"/>
+                                    <span>Enviando...</span>
+                                }
+                                else
+                                {
+                                    <span>Enviar Proposta</span>
+                                }
+                            </MudButton>
+                        </div>
+                    </EditForm>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private long _userId;
+    private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+    private bool _isLoading = true;
+    private bool _isSubmitting;
+
+    [Parameter] public long Id { get; set; }
+    private const string Title = "Propor SkillSwap";
+
+    private readonly SkillSwapRequestCreateDto _entitySkillSwap = new();
+    private ServiceOfferedDto _serviceOfferedA = new();
+    private readonly ServiceOfferedDto _serviceOfferedB = new();
+    private IEnumerable<ServiceOfferedDto> _services = [];
+    private readonly MessageCreateDto _messageCreateDto = new();
+    private long _professionalBId;
+    private long _professionalAId;
+    private ProfessionalProfileDto? _profileA;
+    //private ProfessionalProfileDto? _profileB;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await DefaultInitializationAsync();
+            _professionalAId = _professionalId;
+            await LoadDataAsync();
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        _userId = context.UserId;
+        _professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = context.ShowProfessionalNotFoundAlert;
+        _showContent = context.ShowContent;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var result = await ServiceOfferedService.GetByIdAsync(Id);
+        if (result != null)
+        {
+            _serviceOfferedA = result;
+            _professionalBId = _serviceOfferedA.ProfessionalProfileId;
+            _profileA = await ProfessionalProfileService.GetByIdAsync(_professionalBId);
+        }
+        else
+        {
+            _showProfessionalNotFoundAlert = true;
+            _showContent = false;
+            return;
+        }
+
+        _services = await ServiceOfferedService.GetByProfessionalIdAsync(_professionalAId);
+    }
+
+    private async Task CreateMessage(long skillSwapRequestId)
+    {
+        var serviceOfferedB = await ServiceOfferedService.GetByIdAsync(_serviceOfferedB.Id);
+        if (serviceOfferedB != null)
+        {
+            _messageCreateDto.SenderId = _userId;
+            _messageCreateDto.ReceiverId = _profileA?.UserId ?? 0;
+            _messageCreateDto.SentAt = DateTimeOffset.UtcNow;
+            _messageCreateDto.IsRead = false;
+            _messageCreateDto.Content = $"Proposta de SkillSwap: {_serviceOfferedA.Title} por {serviceOfferedB.Title}";
+            _messageCreateDto.SkillSwapRequestId = skillSwapRequestId;
+
+            await MessageService.AddAsync(_messageCreateDto);
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            _isSubmitting = true;
+
+            _serviceOfferedB.ProfessionalProfileId = _professionalAId;
+
+            _entitySkillSwap.ServiceBId = _serviceOfferedA.Id;
+            _entitySkillSwap.ServiceAId = _serviceOfferedB.Id;
+            _entitySkillSwap.ProfessionalBId = _professionalBId;
+            _entitySkillSwap.ProfessionalAId = _professionalAId;
+            _entitySkillSwap.SwapDate = DateTimeOffset.UtcNow;
+            _entitySkillSwap.Status = StatusSwapRequest.Pending;
+
+            var newProposalId = await ServiceSkillSwap.AddAsync(_entitySkillSwap);
+            await CreateMessage(newProposalId);
+
+            Snackbar.Add("Proposta enviada com sucesso!", Severity.Success);
+            NavigateToListProposal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao criar proposta: {ex.Message}");
+            Snackbar.Add("Ocorreu um erro ao enviar sua proposta.", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void NavigateBack()
+        => NavigationManager.NavigateTo($"{AppRoutes.SkillSwapRequests}");
+
+    private void NavigateToListProposal()
+        => NavigationManager.NavigateTo($"{AppRoutes.SkillSwapRequestsListProposal}");
+
+}

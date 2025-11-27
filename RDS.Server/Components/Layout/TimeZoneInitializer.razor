@@ -1,0 +1,25 @@
+﻿@using RDS.Core.Libraries.Services
+@inject IJSRuntime JSRuntime
+@inject UserTimeZoneService UserTimeZoneService
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var userTimeZone = await JSRuntime.InvokeAsync<string>("timezoneHelper.getUserTimeZone");
+                if (!string.IsNullOrEmpty(userTimeZone))
+                {
+                    UserTimeZoneService.TimeZoneId = userTimeZone;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao obter o fuso horário do usuário: {ex.Message}");
+            }
+        }
+    }
+}

@@ -1,0 +1,553 @@
+﻿@font-face {
+    font-family: 'Rainmore';
+    src: url('../fonts/rainmoreregular.woff2') format('woff2'),
+    url('../fonts/rainmoreregular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+
+/*Estilización del NavMenuHeader */
+.btn-toggle-sidebar {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+/* Estilización de la página principal */
+body {
+    color: #f8fafc;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.page-container {
+    max-width: 1000px;
+    margin: 5px auto;
+    padding: 15px;
+    background-color: #1E293B;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(12, 74, 110, 0.2);
+}
+
+.page-topbar {
+    min-height: auto !important;
+    height: auto !important;
+    padding-top: .5rem;
+    padding-bottom: .5rem;
+}
+
+.page-topbar .btn,
+.page-topbar .btn-link {
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 1;
+}
+
+.pagination {
+    --pagination-radius: 16px;
+}
+
+.pagination .page-link {
+    color: #f87d03;
+    background-color: #23293a;
+    border: 2px solid #23293a;
+    border-radius: var(--pagination-radius);
+    font-weight: 600;
+    margin: 0 4px;
+    transition:
+            background 0.18s cubic-bezier(.4,0,.2,1),
+            color 0.15s cubic-bezier(.4,0,.2,1),
+            box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(40,40,122,0.12);
+}
+
+.pagination .page-link:hover,
+.pagination .page-link:focus {
+    background-color: #f87d03;
+    color: #fff;
+    border-color: #f87d03;
+    box-shadow: 0 4px 16px rgba(248,125,3,0.15), 0 2px 8px rgba(40,40,122,0.12);
+    outline: none;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #f87d03;
+    color: #fff;
+    border-color: #f87d03;
+    box-shadow: 0 4px 18px rgba(248,125,3,0.20), 0 2px 8px rgba(40,40,122,0.13);
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #8a8a8a;
+    background-color: #181c24;
+    border-color: #23293a;
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+/* Opcional: borde de la paginación más redondeado general */
+.pagination {
+    border-radius: var(--pagination-radius);
+    padding: 0.5rem;
+    background: transparent;
+}
+
+
+h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 25px;
+    color: #c2410c;
+    border-bottom: 2px solid #c2410c;
+    padding-bottom: 10px;
+}
+
+a {
+    color: #c2410c;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+    color: #ea580c;
+    text-decoration: underline;
+}
+
+a:active {
+    color: #9a3412;
+}
+
+.align-middle {
+    vertical-align: middle;
+}
+
+button {
+    cursor: pointer;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+    line-height: normal;
+}
+
+.btn-edit {
+    background-color: #c2410c;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #ea580c;
+}
+
+.btn-delete {
+    background-color: #dc2626;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #b91c1c;
+}
+
+.add-button-container {
+    margin-bottom: 20px;
+}
+
+.add-button {
+    background-color: #c2410c;
+    color: white;
+    padding: 10px 18px;
+    font-size: 1rem;
+    border-radius: 6px;
+    border: none;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.add-button:disabled {
+    background-color: #8c3a09;
+    color: #cbd5e1;
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+.cancel-button {
+    background-color: transparent;
+    color: #e2e8f0;
+    border: 1px solid #64748b;
+    padding: 6px 12px;
+    font-size: 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out;
+}
+
+.cancel-button:hover {
+    background-color: #475569;
+    color: #ffffff; 
+    border-color: #334155;
+}
+
+.save-button {
+    background-color: #c2410c;
+    color: #e2e8f0;
+    padding: 6px 12px;
+    font-size: 1rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.save-button:hover {
+    background-color: #d65b26;
+    border-color: #fd7e14;
+    color: #6a1a21;
+}
+
+
+.cancel-add-button-container {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+    width: 100%;
+    padding: 0 0 5px 0;
+    color: #c2410c;
+    margin-top: 0;
+    border-bottom: 2px solid #c2410c;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #0F172A;
+    color: #f1f5f9;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead {
+    background-color: #334155;
+}
+
+th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #475569;
+}
+
+th {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+td {
+    color: #f1f1f1;
+}
+
+.form-control {
+    background-color: #334155;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    width: 100%;
+    transition: none !important;
+}
+
+.form-control:not(:focus):not(:active) {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+.form-control:focus, .form-control:active {
+    background-color: #adb5bd;
+    color: #333333;
+    border-color: #d65b26;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(214, 91, 38, 0.25);
+}
+
+/* Anulación del autollenado de Chrome/WebKit */
+input.form-control:-webkit-autofill,
+input.form-control:-webkit-autofill:hover,
+input.form-control:-webkit-autofill:focus,
+input.form-control:-webkit-autofill:active {
+    /* fuerza el inset shadow para "pintar" todo el fondo */
+    -webkit-box-shadow: 0 0 0 1000px #334155 inset !important;
+    box-shadow: 0 0 0 1000px #334155 inset !important;
+
+    /* y fuerza el color del texto */
+    -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+/* Para Firefox
+input.form-control:-moz-autofill {
+    box-shadow: 0 0 0px 1000px #334155 inset !important;
+    color: #e2e8f0 !important;
+}*/
+
+.form-select {
+    background-color: #334155;
+    color: #e2e8f0;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    width: 100%;
+    transition: none !important;
+}
+
+.form-select:not(:focus):not(:active) {
+    background-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+.form-select:focus, .form-control:active {
+    background-color: #adb5bd;
+    color: #333333;
+    border-color: #d65b26;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(214, 91, 38, 0.25);
+}
+
+/* Anulación del autollenado de Chrome/WebKit */
+input.form-select:-webkit-autofill,
+input.form-select:-webkit-autofill:hover,
+input.form-select:-webkit-autofill:focus,
+input.form-select:-webkit-autofill:active {
+    /* fuerza el inset shadow para "pintar" todo el fondo */
+    -webkit-box-shadow: 0 0 0 1000px #334155 inset !important;
+    box-shadow: 0 0 0 1000px #334155 inset !important;
+
+    /* y fuerza el color del texto */
+    -webkit-text-fill-color: #e2e8f0 !important;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+/*Retira os spinners do InputNumber*/
+.no-spinner::-webkit-outer-spin-button,
+.no-spinner::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/*.no-spinner {
+    -moz-appearance: textfield;
+}*/
+
+/* /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ */
+/* Estilización del contenido del modal */
+.modal-content {
+    background-color: #1E293B; /* igual que .page-container */
+    color: #f1f5f9;
+    border-radius: 10px;
+    border: 1px solid #334155;
+}
+
+/* Encabezado del modal */
+.modal-header.bg-danger {
+    background-color: #b91c1c !important;
+    color: #fff;
+    border-bottom: 1px solid #475569;
+}
+
+/* Título del modal */
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Cuerpo del modal */
+.modal-body {
+    background-color: #1E293B;
+    color: #e2e8f0;
+}
+
+/* Pie del modal */
+.modal-footer {
+    background-color: #1E293B;
+    border-top: 1px solid #334155;
+}
+
+/* Botón secundario (Cancelar) */
+.btn-secondary {
+    background-color: #334155;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+.btn-secondary:hover {
+    background-color: #475569;
+    border-color: #64748b;
+}
+
+/* Botón Eliminar */
+.btn-danger {
+    background-color: #b91c1c;
+    border-color: #dc2626;
+}
+
+.btn-danger:hover {
+    background-color: #b91c1c;
+    border-color: #b91c1c;
+}
+
+.btn-link{
+    color: #c2410c;
+    text-decoration: none;
+}
+.btn-link:hover{
+    color: #ea580c;
+    text-decoration: underline;
+}
+.btn-link:active{
+    color: #9a3412;
+}
+
+/* Estilizar el fondo fuera del modal */
+.modal-backdrop.show {
+    background-color: rgba(15, 23, 42, 0.8); /* igual que el body con opacidad */
+}
+
+/* /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\ */
+/* Estilización del logotipo */
+.logo-area {
+    background-image: linear-gradient(180deg, #1E293B 0%, #0F172A 100%); /* fondo del logotipo */
+    border-bottom: 2px solid #d65b26;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    height: 53px;
+}
+
+.logo-area a:hover {
+    text-decoration: none;
+}
+
+.logo-text {
+    font-family: 'Rainmore', sans-serif;
+    font-size: 32px;
+    font-weight: 1000;
+    color: #000000;
+    text-shadow: -1px -1px 0 #ffffff,
+    1px -1px 0 #ffffff,
+    -1px 1px 0 #ffffff,
+    1px 1px 0 #ffffff;
+}
+
+.logo-text-large {
+    font-size: 80px;
+    padding: 0;
+    margin: 0;
+}
+
+.logo-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 6px;
+    background-color: #d65b26;
+    border-radius: 50%;
+    position: relative;
+    top: 11px;
+}
+
+.logo-dot-large {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    margin-left: -10px;
+    background-color: #d65b26;
+    border-radius: 50%;
+    position: relative;
+    top: 5px;
+}
+
+.service-details {
+    background-color: #243757;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 0;
+}
+
+.service-details-two {
+    background-color: #1E293B;
+}
+
+.status-display {
+    font-size: 1.3rem;
+    color: #FFA07A;
+}
+
+.status-pending {
+    color: #c2410c;
+    border: 2px solid #c2410c33;
+}
+.status-accepted {
+    color: #17994a; 
+    border: 2px solid #17994a33;
+}
+.status-rejected {
+    color: #b91c1c;
+    border: 2px solid #b91c1c33;
+}
+.status-completed {
+    background: #d65b26;
+    color: #0a53be;
+    border: 2px solid #3b82f633;
+}
+.status-default {
+    color: #374151;
+    border: 2px solid #9ca3af33;
+}
+
+/* Dejar todos los enlaces de navegación blancos */
+.nav-pills .nav-link {
+    color: #fff !important;
+    background-color: transparent;
+    transition: color 0.2s;
+}
+
+/* Cuando está activo (seleccionado), aplicar el naranja del tema */
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+    color: #fff !important;
+    background-color: #c2410c !important; 
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* Opcional: hover para ficar laranja também */
+.nav-pills .nav-link:not(.active):hover {
+    color: #fff !important;
+    background-color: #c2410c !important;
+}

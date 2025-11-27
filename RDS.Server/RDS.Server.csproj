@@ -1,0 +1,131 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>aspnet-RDS.Server-f03be4eb-ea82-4fb8-b43b-d077ddec0e8a</UserSecretsId>
+        <!-- tivar la generación de documentación XML -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn>
+        <DocumentationFile>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
+        <PackageReference Include="FluentValidation" Version="12.1.0" />
+        <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Facebook" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.Twitter" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Components" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.10" />
+        <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.10" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.10">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MudBlazor" Version="8.14.0" />
+        <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="3.2.1" />
+        <PackageReference Include="Polly" Version="8.6.4" />
+        <PackageReference Include="Resend" Version="0.2.0" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <ProjectReference Include="..\RDS.Core\RDS.Core.csproj" />
+      <ProjectReference Include="..\RDS.Infrastructure\RDS.Infrastructure.csproj" />
+      <ProjectReference Include="..\RDS.Persistence\RDS.Persistence.csproj" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\AccessDenied.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ConfirmEmail.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ConfirmEmailChange.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ExternalLogin.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ForgotPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ForgotPasswordConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\InvalidPasswordReset.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\InvalidUser.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Lockout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Login.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\LoginWith2fa.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\LoginWithRecoveryCode.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\ChangePassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\DeletePersonalData.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\Disable2fa.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\Email.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\EnableAuthenticator.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\ExternalLogins.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\GenerateRecoveryCodes.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\Index.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\PersonalData.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\ResetAuthenticator.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\SetPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\TwoFactorAuthentication.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Manage\_Imports.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\Register.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\RegisterConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ResendEmailConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ResetPassword.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\ResetPasswordConfirmation.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Pages\_Imports.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Shared\ExternalLoginPicker.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Shared\ManageLayout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Shared\ManageNavMenu.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Shared\ShowRecoveryCodes.razor" />
+      <_ContentIncludedByDefault Remove="Components\Account\Shared\StatusMessage.razor" />
+      <_ContentIncludedByDefault Remove="Components\App.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\MainLayout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\NavMenu.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\NavMenuHeader.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\NavMenuItens.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\NavMenuItensSyncFusion.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\SidebarHost.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\StartLayout.razor" />
+      <_ContentIncludedByDefault Remove="Components\Layout\TimeZoneInitializer.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Auth-test.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Category\Create.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Category\DeleteModal.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Category\Edit.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Category\List.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Error.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Index.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Message\Answer.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Message\Create.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Message\List.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Pagination.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProfessionalProfile\Create.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProfessionalProfile\DeleteModal.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProfessionalProfile\Edit.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ProfessionalProfile\List.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ServicesOffered\Create.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ServicesOffered\DeleteModal.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ServicesOffered\Edit.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\ServicesOffered\List.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Shared\AlertDefault.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Shared\AlertNotAdmin.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Shared\AlertWithButton.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SkillSwapStart.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SkillSwap\EditOffer.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SkillSwap\List.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SkillSwap\ListProposal.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SkillSwap\OfferDetails.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SkillSwap\Proposal.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\Start.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\SyncFusionExamples.razor" />
+      <_ContentIncludedByDefault Remove="Components\Pages\UserNotFound.razor" />
+      <_ContentIncludedByDefault Remove="Components\Routes.razor" />
+      <_ContentIncludedByDefault Remove="Components\_Imports.razor" />
+    </ItemGroup>
+
+</Project>

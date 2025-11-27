@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<AlertWithButton
+    Show="ShowProfessionalNotFoundAlert"
+    Message="Perfil profissional não encontrado. Por favor, complete seu cadastro antes de criar um serviço."
+    ButtonText="Instruções"
+    OnButtonClick="NavigateToInstructions"/>
+
+<AlertWithButton
+    Show="ShowCurrentUserNotFoundAlert"
+    Message="Usuário atual não encontrado. Por favor, faça login novamente."
+    ButtonText="Login"
+    OnButtonClick="NavigateToLogin"/>
+
+@code {
+    [Parameter] public bool ShowProfessionalNotFoundAlert { get; set; }
+
+    [Parameter] public bool ShowCurrentUserNotFoundAlert { get; set; }
+
+    [Parameter] public EventCallback NavigateToInstructions { get; set; }
+
+    [Parameter] public EventCallback NavigateToLogin { get; set; }
+}

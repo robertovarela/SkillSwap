@@ -1,0 +1,65 @@
+﻿@using RDS.Core.Dtos.SkillSwapRequest
+@using RDS.Core.Libraries.ExtensionMethods
+
+@inject NavigationManager NavigationManager
+
+<MudTable Items="Proposals" Hover="true" Breakpoint="Breakpoint.Sm" Dense="true">
+    <HeaderContent>
+        <MudTh>ID</MudTh>
+        <MudTh>Data</MudTh>
+        <MudTh>Profissional A</MudTh>
+        <MudTh>Profissional B</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Ações</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="ID">@context.Id</MudTd>
+        <MudTd DataLabel="Data">@context.SwapDate.ToString("dd/MM/yy")</MudTd>
+        <MudTd DataLabel="Profissional A">@context.ProfessionalAName</MudTd>
+        <MudTd DataLabel="Profissional B">@context.ProfessionalBName</MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status.GetEnumDisplayName()</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Ações">
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" OnClick="@(() => ViewDetails(context))" title="Ver Detalhes"/>
+            <MudIconButton Icon="@Icons.Material.Filled.NotificationAdd" Size="Size.Small" OnClick="@(() => SendAlert(context))" title="Enviar Alerta"/>
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager RowsPerPageString="Linhas por página:"
+                       InfoFormat="{first_item}-{last_item} de {all_items}"
+                       PageSizeOptions="new[] { 5, 10, 20, 50 }"
+                       showfirstbutton="true"
+                       showlastbutton="true"
+                       showpagenumber="true"
+                       showrowsperpage="true"/>
+    </PagerContent>
+</MudTable>
+
+@code {
+    [Parameter]
+    public List<SkillSwapRequestDto> Proposals { get; set; } = new();
+
+    private void ViewDetails(SkillSwapRequestDto proposal)
+    {
+        NavigationManager.NavigateTo($"/SkillSwap/Details/Offer/{proposal.Id}/{proposal.ProfessionalBId}/{proposal.ProfessionalAId}");
+    }
+
+    private void SendAlert(SkillSwapRequestDto proposal)
+    {
+        // TODO: Implementar lógica para abrir diálogo e enviar alerta
+        Console.WriteLine($"Enviar alerta para proposta {proposal.Id}");
+    }
+
+    private Color GetStatusColor(Core.Enums.StatusSwapRequest status) => status switch
+    {
+        Core.Enums.StatusSwapRequest.Pending => Color.Warning,
+        Core.Enums.StatusSwapRequest.Accepted => Color.Success,
+        Core.Enums.StatusSwapRequest.CompletionPendingA => Color.Success,
+        Core.Enums.StatusSwapRequest.CompletionPendingB => Color.Success,
+        Core.Enums.StatusSwapRequest.Rejected => Color.Error,
+        Core.Enums.StatusSwapRequest.Completed => Color.Info,
+        //Core.Enums.StatusSwapRequest.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+}

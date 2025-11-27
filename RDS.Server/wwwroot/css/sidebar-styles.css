@@ -1,0 +1,160 @@
+/* Sidebar Styles */
+.sidebar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    z-index: 1000;
+    background: #232938;
+    overflow-y: auto;
+    border-right: 1px solid #222;
+    transition: transform 0.3s cubic-bezier(0.77, 0, 0.18, 1), box-shadow 0.3s;
+}
+
+/* Estados da sidebar */
+.sidebar-closed {
+    transform: translateX(-100%);
+    box-shadow: none !important;
+}
+
+.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 2px 0 16px rgba(0, 0, 0, 0.18);
+}
+
+/* Backdrop para mobile */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-backdrop.show {
+    display: block;
+    opacity: 1;
+}
+
+/* Conteúdo principal */
+.main-content {
+    transition: margin-left 0.3s cubic-bezier(0.77, 0, 0.18, 1);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Desktop: conteúdo com sidebar */
+@media (min-width: 992px) {
+    .content-with-sidebar {
+        margin-left: 250px;
+    }
+
+    .content-without-sidebar {
+        margin-left: 0;
+    }
+}
+
+/* Mobile e tablet */
+@media (max-width: 992px) {
+    .sidebar-fixed {
+        width: 280px;
+    }
+
+    .content-mobile {
+        margin-left: 0 !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Top row adjustments */
+.top-row {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+}
+
+/* Content area */
+.content {
+    flex: 1;
+    padding: 2rem 1rem;
+}
+
+@media (min-width: 992px) {
+    .content {
+        padding: 2rem;
+    }
+}
+
+/* Button styles */
+.btn-toggle-sidebar {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.btn-toggle-sidebar:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Logo area styles */
+.logo-area {
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+    margin-bottom: 1rem;
+}
+
+.logo-text {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: white;
+}
+
+.logo-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #007bff;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 4px;
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-fixed,
+    .main-content,
+    .sidebar-backdrop {
+        transition: none;
+    }
+}
+
+/* Scrollbar customization for sidebar */
+.sidebar-fixed::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-fixed::-webkit-scrollbar-track {
+    background: #1a1f2e;
+}
+
+.sidebar-fixed::-webkit-scrollbar-thumb {
+    background: #4a5568;
+    border-radius: 3px;
+}
+
+.sidebar-fixed::-webkit-scrollbar-thumb:hover {
+    background: #5a6578;
+}

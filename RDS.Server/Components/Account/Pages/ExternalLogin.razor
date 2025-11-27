@@ -1,0 +1,99 @@
+﻿@page "/Account/ExternalLogin"
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@using RDS.Core.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject IdentityRedirectManager RedirectManager
+
+
+<PageTitle>Confirmar Associação</PageTitle>
+
+<div class="p-lg-5 p-4">
+    <StatusMessage Message="@_message" />
+    @if (_externalLoginInfo is not null)
+    {
+        <div>
+            <h5 class="text-primary">Confirmar Associação</h5>
+            <p class="text-muted">Você se autenticou com <strong>@_externalLoginInfo.ProviderDisplayName</strong>. Como não encontramos uma conta com seu e-mail, por favor, clique no botão para criar uma nova conta e associá-la.</p>
+        </div>
+
+        <div class="mt-4">
+            <EditForm Model="Input" OnValidSubmit="OnValidSubmitAsync" FormName="confirmation" method="post">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <InputText @bind-Value="Input.Email" id="email" class="form-control" autocomplete="email" aria-required="true" readonly="true" />
+                    <ValidationMessage For="() => Input.Email" class="text-danger" />
+                </div>
+                <button type="submit" class="w-100 btn btn-lg btn-primary">Criar e Associar Conta</button>
+            </EditForm>
+        </div>
+    }
+</div>
+
+@code {
+    private string? _message;
+    private ExternalLoginInfo? _externalLoginInfo;
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
+    [SupplyParameterFromQuery] private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _externalLoginInfo = await SignInManager.GetExternalLoginInfoAsync();
+        if (_externalLoginInfo is null)
+        {
+            RedirectManager.RedirectTo("Account/Login");
+            return;
+        }
+
+        if (_externalLoginInfo.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+        {
+            Input.Email = _externalLoginInfo.Principal.FindFirstValue(ClaimTypes.Email) ?? "";
+        }
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        var loginInfo = await SignInManager.GetExternalLoginInfoAsync();
+        if (loginInfo is null)
+        {
+            _message = "Error loading external login information.";
+            return;
+        }
+
+        var user = Activator.CreateInstance<ApplicationUser>();
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        var emailStore = (IUserEmailStore<ApplicationUser>)UserStore;
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+        var createUserResult = await UserManager.CreateAsync(user);
+        if (!createUserResult.Succeeded)
+        {
+            _message = $"Error creating new user: {string.Join(", ", createUserResult.Errors.Select(e => e.Description))}";
+            return;
+        }
+
+        var addLoginResult = await UserManager.AddLoginAsync(user, loginInfo);
+        if (!addLoginResult.Succeeded)
+        {
+            _message = $"Error associating external login: {string.Join(", ", addLoginResult.Errors.Select(e => e.Description))}";
+            return;
+        }
+
+        await SignInManager.SignInAsync(user, isPersistent: false, loginInfo.LoginProvider);
+        RedirectManager.RedirectTo(ReturnUrl);
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = "";
+    }
+}

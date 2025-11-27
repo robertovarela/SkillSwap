@@ -1,0 +1,48 @@
+﻿@using RDS.Server.Services
+@inject ThemeService ThemeService
+@implements IDisposable
+
+@if (ShowSwitch)
+{
+    <MudSwitch Color="Color.Inherit"
+               Value="@ThemeService.IsDarkMode"
+               ValueChanged="@OnThemeChanged"
+               T="bool"
+               Class="@Class"
+               ThumbIcon="@Icons.Material.TwoTone.Lightbulb"/>
+}
+else
+{
+    <MudIconButton Icon="@Icons.Material.Filled.Brightness4"
+                   Color="@ButtonColor"
+                   OnClick="@OnThemeToggle"
+                   arialabel="Alternar tema"
+                   Class="@Class" />
+}
+
+@code {
+    [Parameter] public bool ShowSwitch { get; set; } = true;
+    [Parameter] public Color ButtonColor { get; set; } = Color.Inherit;
+    [Parameter] public string Class { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    private async Task OnThemeToggle()
+    {
+        await ThemeService.ToggleThemeAsync();
+    }
+
+    private async Task OnThemeChanged(bool newValue)
+    {
+        await ThemeService.SetThemeAsync(newValue);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}
+

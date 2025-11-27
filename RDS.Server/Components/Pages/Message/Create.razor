@@ -1,0 +1,215 @@
+﻿@*
+@page "/Messages/create"
+*@
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject IUserContextService UserContext
+@inject IMessageService Service
+@inject IProfessionalProfileService ProfessionalProfileService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@using Blazored.FluentValidation
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.Message
+@using RDS.Core.Dtos.ProfessionalProfile
+@using RDS.Core.Libraries.Services
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Medium">
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Envie uma nova mensagem para um profissional da plataforma
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="Icons.Material.Filled.ArrowBack"
+                   OnClick="@NavigateBack">
+            Voltar
+        </MudButton>
+    </div>
+
+    <!-- Form Card -->
+    <MudPaper Class="pa-6" Elevation="3">
+        <EditForm Model="@_entity" OnValidSubmit="HandleValidSubmit" Context="editContext">
+            <FluentValidationValidator/>
+            <!-- Form Fields -->
+            <MudText Typo="Typo.h6" Class="mb-4">
+                <MudIcon Icon="Icons.Material.Filled.Message" Class="mr-2"/>
+                Conteúdo da Mensagem
+            </MudText>
+
+            <MudGrid>
+                <!-- Receiver Field -->
+                <MudItem xs="12">
+                    <MudAutocomplete T="ProfessionalProfileDto"
+                                     Label="Destinatário"
+                                     @bind-Value="SelectedReceiver"
+                                     SearchFunc="@SearchReceivers"
+                                     ToStringFunc="@(e => e == null ? null : e.ProfessionalName)"
+                                     Variant="Variant.Outlined"
+                                     Required="true"
+                                     RequiredError="O destinatário é obrigatório."
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="Icons.Material.Filled.Person"
+                                     HelperText="Digite ao menos 3 caracteres para buscar."
+                                     DebounceInterval="300"
+                                     ResetValueOnEmptyText="true"
+                                     CoerceValue="true"/>
+                    <ValidationMessage For="@(() => _entity.ReceiverId)"/>
+                </MudItem>
+
+                <!-- Content Field -->
+                <MudItem xs="12" Class="mt-4">
+                    <MudTextField T="string"
+                                  @bind-Value="_entity.Content"
+                                  Label="Mensagem"
+                                  Placeholder="Escreva sua mensagem aqui..."
+                                  Variant="Variant.Outlined"
+                                  Lines="5"
+                                  Required="true"
+                                  RequiredError="O conteúdo da mensagem é obrigatório."
+                                  MaxLength="1000"
+                                  Counter="1000"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="Icons.Material.Filled.Description"
+                                  HelperText="Pressione Ctrl+Enter para enviar a mensagem."
+                                  @onkeydown="HandleContentKeyDown"/>
+                    <ValidationMessage For="@(() => _entity.Content)"/>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-space-between align-center mt-8">
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Default"
+                           StartIcon="Icons.Material.Filled.Cancel"
+                           OnClick="@NavigateBack"
+                           Size="Size.Large">
+                    Cancelar
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           ButtonType="ButtonType.Submit"
+                           StartIcon="Icons.Material.Filled.Send"
+                           Size="Size.Large"
+                           Disabled="@(_isSubmitting || SelectedReceiver == null)">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true"/>
+                        <span>Enviando...</span>
+                    }
+                    else
+                    {
+                        <span>Enviar Mensagem</span>
+                    }
+                </MudButton>
+            </div>
+        </EditForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private long _userId;
+
+    private readonly MessageCreateDto _entity = new();
+    private const string Title = "Enviar Mensagem";
+    private bool _isSubmitting;
+
+    private ProfessionalProfileDto? _selectedReceiverBackingField;
+    private ProfessionalProfileDto? SelectedReceiver
+    {
+        get => _selectedReceiverBackingField;
+        set
+        {
+            _selectedReceiverBackingField = value;
+            _entity.ReceiverId = value?.UserId ?? 0;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await DefaultInitializationAsync();
+            _entity.SenderId = _userId;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        _userId = context.UserId;
+    }
+
+    private async Task<IEnumerable<ProfessionalProfileDto>> SearchReceivers(string value, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length < 3)
+            return [];
+
+        try
+        {
+            var profiles = await ProfessionalProfileService.SearchByNameAsync(value, _userId);
+            return profiles;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao buscar destinatários: {ex.Message}");
+            Snackbar.Add("Erro ao buscar destinatários.", Severity.Error);
+            return [];
+        }
+    }
+
+
+    private async Task HandleContentKeyDown(KeyboardEventArgs e)
+    {
+        if ((e.CtrlKey || e.MetaKey) && e.Key == "Enter" && !string.IsNullOrWhiteSpace(_entity.Content))
+        {
+            await HandleValidSubmit();
+        }
+        else if (e.Key == "Escape")
+        {
+            NavigateBack();
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        if (SelectedReceiver == null)
+        {
+            Snackbar.Add("Por favor, selecione um destinatário.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            _isSubmitting = true;
+            await Service.AddAsync(_entity);
+            Snackbar.Add("Mensagem enviada com sucesso!", Severity.Success);
+            NavigateBack();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao enviar mensagem: {ex.Message}");
+            Snackbar.Add("Ocorreu um erro ao enviar a mensagem.", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private void NavigateBack()
+    {
+        NavigationManager.NavigateTo($"{AppRoutes.Messages}");
+    }
+}

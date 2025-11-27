@@ -1,0 +1,625 @@
+﻿@page "/SkillSwap/Edit/Offer/{id:long}"
+@using System.Globalization
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.Message
+@using RDS.Core.Dtos.ProfessionalProfile
+@using RDS.Core.Dtos.ServiceOffered
+@using RDS.Core.Dtos.SkillSwapRequest
+@using RDS.Core.Enums
+@using RDS.Core.Exceptions
+@using RDS.Core.Libraries.ExtensionMethods
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Utils
+
+@inject IUserContextService UserContext
+@inject IServiceOfferedService ServiceOfferedService
+@inject ISkillSwapService SkillSwapService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IProfessionalProfileService ProfessionalProfileService
+@inject IMessageService MessageService
+@inject ISkillSwapNotificationService NotificationService
+@inject CultureHelper CultureHelper
+
+@attribute [Authorize]
+@rendermode InteractiveServer
+@implements IDisposable
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Large">
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Avalie a proposta e atualize seu status
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="Icons.Material.Filled.ArrowBack"
+                   OnClick="@NavigateBack">
+            Voltar
+        </MudButton>
+    </div>
+
+    <AlertDefault
+        ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+        NavigateToInstructions="UserContext.NavigateToInstructions"
+        NavigateToLogin="UserContext.NavigateToLogin"
+    />
+
+    @if (_isLoading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+        </div>
+    }
+    else if (_showContent)
+    {
+        <MudGrid Spacing="4">
+            <!-- Details Column -->
+            <MudItem xs="12" md="6">
+                <MudStack Spacing="4">
+                    <!-- Requested Service (A) -->
+                    @if (_skillSwapRequest?.ServiceAId is not null && _serviceOfferedA is not null)
+                    {
+                        <MudCard>
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText
+                                        Typo="Typo.h6">@(_isReceiver ? "Oferta Recebida (Serviço)" : "Sua Oferta (Serviço)")</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudList T="string" clickable="false">
+                                    <MudListItem T="string"
+                                                 Icon="@Icons.Material.Filled.Title">@_serviceOfferedA?.Title</MudListItem>
+                                    <MudListItem T="string"
+                                                 Icon="@Icons.Material.Filled.AttachMoney">@_serviceOfferedA?.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudListItem>
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                                        <MudText Typo="Typo.caption">Oferecido por: @_profileA?.ProfessionalName</MudText>
+                                    </MudListItem>
+                                </MudList>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                    else if (_skillSwapRequest?.OfferedAmount is not null)
+                    {
+                        <MudCard>
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@(_isReceiver ? "Oferta Recebida (SD$)" : "Sua Oferta (SD$)")</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="d-flex flex-column justify-center align-center pa-4">
+                                <MudIcon Icon="Icons.Material.Filled.MonetizationOn" Color="Color.Success" Style="font-size: 48px;" Class="mb-2"/>
+                                <MudText Typo="Typo.h4" Style="font-weight: 700;">@_skillSwapRequest.OfferedAmount.Value.ToString("C2", CultureHelper.SkillDollarCulture)</MudText>
+                                <MudText Typo="Typo.caption" Class="mt-4">Oferecido por: @_profileA?.ProfessionalName</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                    <!-- Offered Service (B) -->
+                    @if (_skillSwapRequest?.ServiceBId is not null && _serviceOfferedB is not null)
+                    {
+                        <MudCard>
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@(_isReceiver ? "Seu Serviço (Solicitado)" : "Serviço Desejado")</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudList T="string" clickable="false">
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.Title">@_serviceOfferedB.Title</MudListItem>
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.AttachMoney">@_serviceOfferedB.Price?.ToString("C2", CultureHelper.SkillDollarCulture)</MudListItem>
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.Person">
+                                        <MudText Typo="Typo.caption">Oferecido por: @_profileB?.ProfessionalName</MudText>
+                                    </MudListItem>
+                                </MudList>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                    else if (_skillSwapRequest?.OfferedAmount is not null)
+                    {
+                        <MudCard>
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@(_isReceiver ? "Oferta Recebida (SD$)" : "Sua Oferta (SD$)")</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="d-flex flex-column justify-center align-center pa-4">
+                                <MudIcon Icon="Icons.Material.Filled.MonetizationOn" Color="Color.Success" Style="font-size: 48px;" Class="mb-2"/>
+                                <MudText Typo="Typo.h4" Style="font-weight: 700;">@_skillSwapRequest.OfferedAmount.Value.ToString("C2") SD$</MudText>
+                                <MudText Typo="Typo.caption" Class="mt-4">Oferecido por: @_profileB?.ProfessionalName</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                </MudStack>
+            </MudItem>
+
+            <!-- CategoryTypes.Form Column -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="pa-6 mud-height-full">
+                    <MudText Typo="Typo.h6" Class="mb-4">Ações da Proposta</MudText>
+                    
+                    @if (_canPerformAction)
+                    {
+                        <MudStack Spacing="2">
+                            @if (_isReceiver) // Professional B
+                            {
+                                @if (_entity.Status == StatusSwapRequest.Pending)
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Accepted))"
+                                               StartIcon="@Icons.Material.Filled.CheckCircle" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Aceitar Proposta
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Error"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Rejected))"
+                                               StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Rejeitar Proposta
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                                               OnClick="@ShowCounterOfferDialog"
+                                               StartIcon="@Icons.Material.Filled.SwapCalls" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Fazer Contraproposta
+                                    </MudButton>
+                                }
+                                else if (_entity.Status == StatusSwapRequest.Accepted)
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Completed))"
+                                               StartIcon="@Icons.Material.Filled.Done" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Marcar como Concluída
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Cancelled))"
+                                               StartIcon="@Icons.Material.Filled.Block" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Cancelar Troca
+                                    </MudButton>
+                                }
+                                else if ((_entity.Status == StatusSwapRequest.CompletionPendingB))
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Completed))"
+                                               StartIcon="@Icons.Material.Filled.DoneAll" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Confirmar Conclusão
+                                    </MudButton>
+                                }
+                            }
+                            else // Is Proposer (Professional A)
+                            {
+                                @if (_entity.Status == StatusSwapRequest.Pending)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Cancelled))"
+                                               StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Cancelar Proposta
+                                    </MudButton>
+                                }
+                                else if (_entity.Status == StatusSwapRequest.Countered) // New logic for Professional A
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                                               OnClick="@HandleAcceptCounterOfferAsync"
+                                               StartIcon="@Icons.Material.Filled.CheckCircle" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Aceitar Contraproposta
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Error"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Rejected, true))"
+                                               StartIcon="@Icons.Material.Filled.Cancel" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Rejeitar Contraproposta
+                                    </MudButton>
+                                }
+                                else if (_entity.Status == StatusSwapRequest.Accepted)
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Completed))"
+                                               StartIcon="@Icons.Material.Filled.Done" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Marcar como Concluída
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Cancelled))"
+                                               StartIcon="@Icons.Material.Filled.Block" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Cancelar Troca
+                                    </MudButton>
+                                }
+                                else if ((_entity.Status == StatusSwapRequest.CompletionPendingA))
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Info"
+                                               OnClick="@(() => ShowConfirmationDialog(StatusSwapRequest.Completed))"
+                                               StartIcon="@Icons.Material.Filled.DoneAll" Size="Size.Large"
+                                               Disabled="@_isSubmitting">Confirmar Conclusão
+                                    </MudButton>
+                                }
+                            }
+
+                            @if (_isSubmitting)
+                            {
+                                <div class="d-flex justify-center pa-4">
+                                    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
+                                </div>
+                            }
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info">Nenhuma ação disponível para o status atual:
+                            <strong>@_entity.Status.GetEnumDisplayName()</strong></MudAlert>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private long _userId;
+    private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+    private bool _isLoading = true;
+    private bool _isSubmitting;
+    private bool _isReceiver;
+    private bool _canPerformAction;
+
+    [Parameter] public long Id { get; set; }
+    private const string Title = "Avaliar Proposta de Troca";
+
+    private SkillSwapUpdateStatusDto _entity = new();
+    private SkillSwapRequestDto? _skillSwapRequest = new();
+    private ServiceOfferedDto? _serviceOfferedA = new();
+    private ServiceOfferedDto? _serviceOfferedB = new();
+    private IEnumerable<ServiceOfferedDto> _proposerServices = new List<ServiceOfferedDto>();
+    private ProfessionalProfileDto? _profileA;
+    private ProfessionalProfileDto? _profileB;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DefaultInitializationAsync();
+        await LoadDataAsync();
+        NotificationService.OnSkillSwapUpdated += HandleSkillSwapUpdated;
+        _isLoading = false;
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        _userId = context.UserId;
+        _professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = context.ShowProfessionalNotFoundAlert;
+        _showContent = context.ShowContent;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        var updateDto = await SkillSwapService.GetForEditAsync(Id, _professionalId);
+        if (updateDto == null)
+        {
+            _showContent = false;
+            _showProfessionalNotFoundAlert = true;
+            return;
+        }
+        _entity = updateDto;
+        _canPerformAction = CanPerformAction(_entity.Status);
+
+        _skillSwapRequest = await SkillSwapService.GetByIdAsync(Id, _professionalId);
+        if (_skillSwapRequest is not null)
+        {
+            _isReceiver = _professionalId == _skillSwapRequest.ProfessionalBId;
+            _serviceOfferedB = await ServiceOfferedService.GetByIdAsync(_skillSwapRequest.ServiceBId);
+            if (_skillSwapRequest.ServiceAId.HasValue)
+            {
+                _serviceOfferedA = await ServiceOfferedService.GetByIdAsync(_skillSwapRequest.ServiceAId.Value);
+            }
+            _profileA = await ProfessionalProfileService.GetByIdAsync(_skillSwapRequest.ProfessionalAId);
+            _profileB = await ProfessionalProfileService.GetByIdAsync(_skillSwapRequest.ProfessionalBId);
+            if (_profileA is not null)
+            {
+                _proposerServices = await ServiceOfferedService.GetByProfessionalIdAsync(_profileA.Id);
+            }
+        }
+    }
+
+    private async void HandleSkillSwapUpdated(long skillSwapId)
+    {
+        try
+        {
+            if (skillSwapId == Id)
+            {
+                await InvokeAsync(async () =>
+                {
+                    await LoadDataAsync();
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Erro ao processar atualização de SkillSwap: {e.Message}");
+        }
+    }
+    
+    private bool CanPerformAction(StatusSwapRequest status)
+    {
+        return status is StatusSwapRequest.Pending or StatusSwapRequest.Accepted or StatusSwapRequest.Countered or StatusSwapRequest.CompletionPendingA or StatusSwapRequest.CompletionPendingB;
+    }
+
+    private async Task HandleAcceptCounterOfferAsync()
+    {
+        var parameters = new DialogParameters<ConfirmActionDialog>
+        {
+            { "Title", "Aceitar Contraproposta" },
+            { "ContentText", "Você tem certeza que deseja aceitar esta contraproposta? O valor será debitado do seu saldo." },
+            { "ButtonText", "Sim, Aceitar" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmActionDialog>("Confirmar Ação", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            try
+            {
+                _isSubmitting = true;
+                await SkillSwapService.AcceptOfferAsync(Id, _professionalId);
+                Snackbar.Add("Contraproposta aceita com sucesso!", Severity.Success);
+                NavigateBack();
+            }
+            catch (InsufficientBalanceException ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Ocorreu um erro ao aceitar a contraproposta.", Severity.Error);
+                Console.WriteLine($"Erro ao aceitar contraproposta: {ex.Message}");
+            }
+            finally
+            {
+                _isSubmitting = false;
+            }
+        }
+    }
+
+    private async Task ShowConfirmationDialog(StatusSwapRequest newStatus, bool isCounterOfferResponse = false)
+    {
+        var parameters = new DialogParameters<ConfirmActionDialog>();
+        var title = "";
+        var content = "";
+        var buttonText = "";
+        var color = Color.Primary;
+        var icon = "";
+        var showTextField = false;
+
+        switch (newStatus)
+        {
+            case StatusSwapRequest.Accepted:
+                title = isCounterOfferResponse ? "Aceitar Contraproposta" : "Aceitar Proposta";
+                content = "Você tem certeza que deseja aceitar? Uma notificação será enviada ao outro profissional.";
+                buttonText = "Sim, Aceitar";
+                color = Color.Success;
+                icon = Icons.Material.Filled.CheckCircle;
+                break;
+            case StatusSwapRequest.Rejected:
+                title = isCounterOfferResponse ? "Rejeitar Contraproposta" : "Rejeitar Proposta";
+                content = "Tem certeza que deseja rejeitar? Você pode adicionar uma mensagem explicando o motivo.";
+                buttonText = "Sim, Rejeitar";
+                color = Color.Error;
+                icon = Icons.Material.Filled.Cancel;
+                showTextField = true;
+                break;
+            case StatusSwapRequest.Cancelled:
+                title = "Cancelar Proposta/Troca";
+                content = "Tem certeza que deseja cancelar? Esta ação não poderá ser desfeita.";
+                buttonText = "Sim, Cancelar";
+                color = Color.Warning;
+                icon = Icons.Material.Filled.Block;
+                showTextField = true;
+                break;
+            case StatusSwapRequest.Completed:
+                var isFinalConfirmation = _entity.Status is StatusSwapRequest.CompletionPendingA or StatusSwapRequest.CompletionPendingB;
+                title = isFinalConfirmation ? "Confirmar Conclusão da Troca" : "Marcar como Concluída";
+                content = isFinalConfirmation
+                    ? "Ao confirmar, você e o outro profissional concordam que a troca foi finalizada com sucesso."
+                    : "Você está marcando a troca como concluída. O outro profissional precisará confirmar para finalizar o processo.";
+                buttonText = isFinalConfirmation ? "Sim, Confirmar Conclusão" : "Sim, Marcar como Concluída";
+                color = Color.Info;
+                icon = isFinalConfirmation ? Icons.Material.Filled.DoneAll : Icons.Material.Filled.Done;
+                break;
+        }
+
+        parameters.Add(x => x.Title, title);
+        parameters.Add(x => x.ContentText, content);
+        parameters.Add(x => x.ButtonText, buttonText);
+        parameters.Add(x => x.Color, color);
+        parameters.Add(x => x.Icon, icon);
+        parameters.Add(x => x.ShowTextField, showTextField);
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmActionDialog>(title, parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: string message })
+        {
+            await UpdateStatusAsync(newStatus, message);
+        }
+    }
+
+    private async Task ShowCounterOfferDialog()
+    {
+        var availableCounterOfferServices = _proposerServices.Where(s => s.Id != _serviceOfferedA?.Id).ToList();
+
+        var parameters = new DialogParameters<CounterOfferDialog>
+        {
+            { "ProposerServices", availableCounterOfferServices }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Small };
+        var dialog = await DialogService.ShowAsync<CounterOfferDialog>("Fazer Contraproposta", parameters, options);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false })
+        {
+            var dto = new CounterOfferDto
+            {
+                SkillSwapRequestId = Id,
+                SenderUserId = _userId,
+                SenderProfessionalId = _professionalId
+            };
+            var counterOfferMessage = "";
+
+            switch (result.Data)
+            {
+                case long selectedServiceId:
+                    var selectedService = _proposerServices.FirstOrDefault(s => s.Id == selectedServiceId);
+                    if (selectedService != null)
+                    {
+                        dto.NewServiceAId = selectedServiceId;
+                        dto.NewOfferedAmount = null;
+                        counterOfferMessage = $"Olá! Agradeço a proposta. No momento, o serviço '{_serviceOfferedA?.Title}' não me interessa, mas que tal trocarmos pelo seu serviço '{selectedService.Title}'?";
+                    }
+                    break;
+                case decimal offeredAmount:
+                    dto.NewServiceAId = null;
+                    dto.NewOfferedAmount = offeredAmount;
+                    counterOfferMessage = $"Olá! Agradeço a proposta, mas no momento não tenho interesse em uma troca. No entanto, posso realizar o meu serviço ('{_serviceOfferedA?.Title}') pelo valor de {offeredAmount:C2} SD$. O que acha?";
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(counterOfferMessage))
+            {
+                dto.Message = counterOfferMessage;
+                await SkillSwapService.MakeCounterOfferAsync(dto);
+                Snackbar.Add("Contraproposta enviada com sucesso!", Severity.Success);
+                NavigateBack();
+            }
+        }
+    }
+
+    private async Task UpdateStatusAsync(StatusSwapRequest newStatus, string? message)
+    {
+        if (_skillSwapRequest is null) return;
+
+        try
+        {
+            _isSubmitting = true;
+
+            var currentSwapRequest = await SkillSwapService.GetForEditAsync(Id, _professionalId);
+            if (currentSwapRequest == null)
+            {
+                Snackbar.Add("Proposta não encontrada.", Severity.Error);
+                return;
+            }
+
+            var statusToUpdate = newStatus;
+            if (newStatus == StatusSwapRequest.Completed)
+            {
+                if (currentSwapRequest.Status != StatusSwapRequest.CompletionPendingA &&
+                    currentSwapRequest.Status != StatusSwapRequest.CompletionPendingB)
+                {
+                    statusToUpdate = _isReceiver ? StatusSwapRequest.CompletionPendingA : StatusSwapRequest.CompletionPendingB;
+                }
+            }
+
+            await SkillSwapService.UpdateStatusAsync(Id, statusToUpdate);
+
+            var finalMessage = "";
+            if (!string.IsNullOrWhiteSpace(message))
+            {
+                finalMessage = message;
+            }
+            else
+            {
+                switch (newStatus)
+                {
+                    case StatusSwapRequest.Accepted:
+                        finalMessage = "Sua proposta foi aceita! Agora vocês podem combinar os detalhes da troca.";
+                        break;
+                    case StatusSwapRequest.Countered:
+                        break;
+                    case StatusSwapRequest.Completed:
+                        var isFinalConfirmation = currentSwapRequest.Status is StatusSwapRequest.CompletionPendingA or StatusSwapRequest.CompletionPendingB;
+                        finalMessage = isFinalConfirmation
+                            ? "Confirmei a conclusão da nossa troca. Obrigado!"
+                            : "Marquei nossa troca como concluída. Por favor, confirme para finalizarmos.";
+                        break;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(finalMessage))
+            {
+                await SendMessageAsync(finalMessage);
+            }
+
+            Snackbar.Add("Status da proposta atualizado com sucesso!", Severity.Success);
+            NavigateBack();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Ocorreu um erro ao atualizar o status.", Severity.Error);
+            Console.WriteLine($"Erro ao atualizar status: {ex.Message}");
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task SendMessageAsync(string content)
+    {
+        var messageDto = new MessageCreateDto
+        {
+            SenderId = _userId,
+            ReceiverId = _isReceiver
+                ? (_profileB?.UserId ?? 0)
+                : (_profileA?.UserId ?? 0),
+            Content = content,
+            SentAt = DateTimeOffset.UtcNow,
+            IsRead = false,
+            SkillSwapRequestId = Id
+        };
+        await MessageService.AddAsync(messageDto);
+    }
+
+    private IEnumerable<StatusSwapRequest> GetAvailableActions()
+    {
+        // ReSharper disable once SwitchStatementMissingSomeEnumCasesNoDefault
+        switch (_entity.Status)
+        {
+            case StatusSwapRequest.Pending:
+                return _isReceiver
+                    ? new[] { StatusSwapRequest.Accepted, StatusSwapRequest.Rejected }
+                    : new[] { StatusSwapRequest.Cancelled };
+            case StatusSwapRequest.Countered:
+                return !_isReceiver
+                    ? new[] { StatusSwapRequest.Accepted, StatusSwapRequest.Rejected }
+                    : Array.Empty<StatusSwapRequest>();
+            case StatusSwapRequest.Accepted:
+                return new[] { StatusSwapRequest.Completed, StatusSwapRequest.Cancelled };
+        }
+
+        if (_isReceiver && _entity.Status == StatusSwapRequest.CompletionPendingB ||
+            !_isReceiver && _entity.Status == StatusSwapRequest.CompletionPendingA)
+        {
+            return new[] { StatusSwapRequest.Completed };
+        }
+
+        return Array.Empty<StatusSwapRequest>();
+    }
+
+    private void NavigateBack()
+        => NavigationManager.NavigateTo($"{AppRoutes.SkillSwapRequestsListProposal}");
+
+    public void Dispose()
+    {
+        NotificationService.OnSkillSwapUpdated -= HandleSkillSwapUpdated;
+    }
+}

@@ -1,0 +1,135 @@
+﻿@page "/account/manage"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using RDS.Core.Models
+@using RDS.Server.Components.Pages
+@layout AccountLayout
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Perfil de Usuário</PageTitle>
+
+<!-- Header Section -->
+<MudGrid Justify="Justify.SpaceBetween" alignitems="AlignItems.Center" Class="mb-6">
+    <MudItem xs="12" sm="9">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-2">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme">
+                Gerencie as informações do seu perfil e configurações de conta.
+            </MudText>
+        </div>
+    </MudItem>
+    <MudItem xs="12" sm="3" Class="d-flex justify-end">
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Href="@AppRoutes.Home">
+            Voltar
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+<StatusMessage/>
+
+<div class="mt-4">
+    <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
+        <DataAnnotationsValidator/>
+        <ValidationSummary class="text-danger" role="alert"/>
+
+        <MudStack Spacing="3">
+            <MudStaticTextField Value="@_username"
+                                Label="Nome de Usuário"
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.Start"
+                                AdornmentIcon="@Icons.Material.Filled.Person"
+                                Disabled="true"/>
+
+            <MudStaticTextField For="@(() => Input.PhoneNumber)"
+                                @bind-Value="Input.PhoneNumber"
+                                Label="Telefone"
+                                Variant="Variant.Outlined"
+                                Adornment="Adornment.Start"
+                                AdornmentIcon="@Icons.Material.Filled.Phone"
+                                HelperText="Por favor, digite seu número de telefone."
+                                Mask="@(new PatternMask("(00) 00000-0000") { MaskChars = new[] { new MaskChar('0', @"[0-9]") } })"
+                                UserAttributes="@(new() { { "inputmode", "numeric" } })"/>
+
+            <MudStaticButton Variant="Variant.Filled"
+                             Color="Color.Primary"
+                             FullWidth="true"
+                             FormAction="FormAction.Submit">
+                Salvar
+            </MudStaticButton>
+
+        </MudStack>
+    </EditForm>
+</div>
+
+<MudDivider Class="my-4"/>
+
+<MudList T="string" clickable="false">
+    <MudListItem T="string" Href="/Account/Manage/Email" Icon="@Icons.Material.Filled.Email">
+        E-mail
+    </MudListItem>
+    <MudListItem T="string" Href="/Account/Manage/ChangePassword" Icon="@Icons.Material.Filled.Lock">
+        Senha
+    </MudListItem>
+    <MudListItem T="string" Href="/Account/Manage/TwoFactorAuthentication" Icon="@Icons.Material.Filled.PhonelinkSetup">
+        Autenticação de dois fatores
+    </MudListItem>
+    <MudListItem T="string" Href="/Account/Manage/PersonalData" Icon="@Icons.Material.Filled.AccountBox">
+        Dados Pessoais
+    </MudListItem>
+</MudList>
+
+@code {
+    private ApplicationUser _user = null!;
+    private string? _username;
+    private string? _phoneNumber;
+
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = null!;
+
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        _username = await UserManager.GetUserNameAsync(_user);
+        _phoneNumber = await UserManager.GetPhoneNumberAsync(_user);
+
+        Input.PhoneNumber ??= _phoneNumber;
+    }
+
+    private async Task OnValidSubmitAsync()
+    {
+        // Remove a formatação antes de salvar (apenas números)
+        var cleanPhone = Input.PhoneNumber != null
+            ? new string(Input.PhoneNumber.Where(char.IsDigit).ToArray())
+            : null;
+
+        if (cleanPhone != _phoneNumber)
+        {
+            var setPhoneResult = await UserManager.SetPhoneNumberAsync(_user, cleanPhone);
+            if (!setPhoneResult.Succeeded)
+            {
+                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
+            }
+        }
+
+        await SignInManager.RefreshSignInAsync(_user);
+        RedirectManager.RedirectToCurrentPageWithStatus("Seu perfil foi atualizado", HttpContext);
+    }
+
+    private sealed class InputModel
+    {
+        [Phone]
+        [Display(Name = "Phone number")]
+        public string? PhoneNumber { get; set; }
+    }
+
+    private const string Title = "Gerenciar Perfil";
+}

@@ -1,0 +1,188 @@
+:root {
+    --ss-dark-blue: #222857;
+    --ss-navy-blue: #28287a;
+    --ss-gray: #23252e;
+    --ss-dark-gray: #1a1a25;
+    --ss-orange: #f87d03;
+    --ss-orange-hover: #da6701;
+    --ss-light: #fbf9f9;
+}
+
+body {
+    background: linear-gradient(135deg, #1a1a1a 0%, #151840 100%);
+    color: var(--ss-light);
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--ss-dark-blue);
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    padding: 1.5rem 1rem;
+}
+.sidebar a {
+    color: var(--ss-orange);
+    text-decoration: none;
+    display: block;
+    margin: 0.5rem 0;
+    font-weight: 500;
+}
+.sidebar .nav-link.active {
+    background-color: #05055d;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+/* Logo e Destaques */
+.logo {
+    font-family: 'Arial Black', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: 2px;
+    color: #ffffff;
+}
+.dot {
+    height: 10px;
+    width: 10px;
+    background-color: rgb(245, 70, 6);
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 4px;
+}
+.text-orange {
+    color: var(--ss-orange) !important;
+}
+
+/* Seções temáticas para landing page */
+.section-hero {
+    background: var(--ss-navy-blue);
+    color: #fff;
+}
+/*.section-hero .logo-text {
+    color: var(--ss-orange) !important;
+}*/
+.section-hero h1, .section-hero p, .section-hero a {
+    color: #fff !important;
+}
+
+.section-features {
+    background: var(--ss-gray);
+    color: #fff;
+}
+.section-features h2, .section-features h4 {
+    color: var(--ss-orange);
+}
+.section-features p {
+    color: #faf8f4;
+}
+
+.section-signup {
+    background: var(--ss-dark-blue);
+    color: #fff;
+}
+.section-signup h2 {
+    color: var(--ss-orange);
+}
+
+/* Container padrão das seções */
+section, .container-main-content {
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(40, 40, 122, 0.07);
+    padding: 2rem 2rem 1rem 2rem;
+    margin-bottom: 2.5rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Botões */
+.btn-theme, .btn-orange {
+    background-color: var(--ss-orange) !important;
+    color: #fff !important;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.5rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(40,40,122,0.05);
+    transition: background 0.2s;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    min-width: 120px;
+}
+
+.btn-theme:hover, .btn-theme:focus,
+.btn-orange:hover, .btn-orange:focus {
+    background-color: var(--ss-orange-hover) !important;
+    color: #fff !important;
+}
+
+.btn-orange {
+    font-weight: bold;
+    border-radius: 18px;
+}
+
+.signup-form {
+    max-width: 430px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.signup-input {
+    background: #2e3a4e;
+    color: #fff;
+    border: 1px solid #444b5a;
+    border-radius: 10px;
+}
+.signup-input:focus {
+    background: #24304a;
+    color: #fff;
+}
+.signup-btn {
+    margin-top: 1rem;
+    border-radius: 14px;
+    font-size: 1.7rem;
+    font-weight: 600;
+    padding: 0.6rem;
+    width: 100%;
+}
+
+/* Footer */
+footer {
+    background: var(--ss-dark-gray);
+    color: #cacaca;
+    border-radius: 0 0 18px 18px;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+}
+footer a {
+    color: var(--ss-orange);
+}
+
+.signup-input::placeholder {
+    color: #c9d5ea;   /* Um azul claro/chumbo suave que fica ótimo em fundos escuros */
+    opacity: 1;       /* Garante visibilidade máxima */
+}
+
+.navbar-landing {
+    background: rgba(24, 27, 60, 0.98);
+    border-bottom: 2px solid #f87d03;
+    padding: 0.7rem 0;
+    z-index: 1050;
+}
+
+.navbar-landing .nav-link {
+    color: #f87d03 !important;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    padding: 0.6rem 1.2rem;
+    transition: color 0.2s, background 0.2s;
+    border-radius: 10px;
+}
+
+.navbar-landing .nav-link:hover, .navbar-landing .nav-link.active {
+    color: #fff !important;
+    background: #f87d03;
+    text-decoration: none;
+}

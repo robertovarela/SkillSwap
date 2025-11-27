@@ -1,0 +1,161 @@
+﻿/* Cores de Texto do Tema */
+/*noinspection CssUnresolvedCustomProperty*/
+.text-primary-theme {
+    color: var(--mud-palette-text-primary) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.text-secondary-theme {
+    color: var(--mud-palette-text-secondary) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.text-disabled-theme {
+    color: var(--mud-palette-text-disabled) !important;
+}
+
+/* Cores de Background do Tema */
+/*noinspection CssUnresolvedCustomProperty*/
+.bg-surface-theme {
+    background-color: var(--mud-palette-surface) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.bg-background-theme {
+    background-color: var(--mud-palette-background) !important;
+}
+
+/* Cores Principais do Tema */
+/*noinspection CssUnresolvedCustomProperty*/
+.text-primary-color-theme {
+    color: var(--mud-palette-primary) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.bg-primary-theme {
+    background-color: var(--mud-palette-primary) !important;
+}
+
+/* Cores de Status do Tema */
+/*noinspection CssUnresolvedCustomProperty*/
+.text-error-theme {
+    color: var(--mud-palette-error) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.text-success-theme {
+    color: var(--mud-palette-success) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.text-warning-theme {
+    color: var(--mud-palette-warning) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.text-info-theme {
+    color: var(--mud-palette-info) !important;
+}
+
+/*noinspection CssUnresolvedCustomProperty*/
+.BackgroundGray {
+    background: var(--mud-palette-background-gray) !important;
+}
+
+/* ========================================
+   CORES DO MUDTABLE - MAPEAMENTO DE VARIÁVEIS
+   ======================================== */
+
+/* FUNDO GERAL DA TABELA
+   Variável do tema: Background (PaletteLight/PaletteDark)
+   Uso: Cor de fundo de toda a tabela */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table {
+    background-color: var(--mud-palette-background) !important;
+}
+
+/* CABEÇALHO DA TABELA (thead)
+   Variável do tema: BackgroundGray (PaletteLight/PaletteDark)
+   Uso: Cor de fundo do cabeçalho da tabela (onde ficam os títulos das colunas) */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-head {
+    background-color: var(--mud-palette-background-gray) !important;
+}
+
+/* TEXTO DO CABEÇALHO
+   Variável do tema: TextPrimary (PaletteLight/PaletteDark)
+   Uso: Cor do texto dos títulos das colunas */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-head .mud-table-cell {
+    color: var(--mud-palette-text-primary) !important;
+    font-weight: 600;
+}
+
+/* FUNDO DAS LINHAS (tbody)
+   Variável do tema: Background (PaletteLight/PaletteDark)
+   Uso: Cor de fundo padrão das linhas de dados */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-body .mud-table-row {
+    background-color: var(--mud-palette-background) !important;
+}
+
+/* HOVER NAS LINHAS (ao passar o mouse)
+   Variável do tema: TableHover (PaletteLight/PaletteDark)
+   Uso: Cor de destaque quando você passa o mouse sobre uma linha
+   AJUSTE AQUI: Para mudar a cor do hover, altere TableHover no ConfigurationTheme.cs
+   Exemplo tema claro: TableHover = "rgba(255,159,69,0.15)" para laranja suave */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-body .mud-table-row:hover {
+    background-color: var(--mud-palette-table-hover) !important;
+}
+
+/* TEXTO DAS CÉLULAS
+   Variável do tema: TextPrimary (PaletteLight/PaletteDark)
+   Uso: Cor do texto dentro das células de dados */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-body .mud-table-cell {
+    color: var(--mud-palette-text-primary) !important;
+}
+
+/* CONTAINER DA TABELA
+   Variável do tema: Background (PaletteLight/PaletteDark)
+   Uso: Cor de fundo do container que envolve a tabela */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-container {
+    background-color: var(--mud-palette-background) !important;
+}
+
+/* LINHAS ALTERNADAS (efeito zebrado) - OPCIONAL
+   Variável do tema: TableStriped (PaletteLight/PaletteDark)
+   Descomente se quiser ativar o efeito zebrado */
+/*noinspection CssUnresolvedCustomProperty*/
+.mud-table-body .mud-table-row:nth-of-type(even) {
+    background-color: var(--mud-palette-table-striped) !important;
+}
+
+/* ========================================
+   RESUMO DAS VARIÁVEIS DO TEMA (ConfigurationTheme.cs):
+
+   PaletteLight (Tema Claro):
+   - Background: "#ffffffff" → Fundo branco da tabela e linhas
+   - BackgroundGray: "rgba(245,245,245,1)" → Fundo cinza do cabeçalho
+   - TextPrimary: "#142536" → Texto escuro (cabeçalho e células)
+   - TableHover: "rgba(255,159,69,0.1)" → HOVER (laranja suave) ← AJUSTE AQUI!
+   - TableStriped: "rgba(0,0,0,0.02)" → Linhas alternadas (zebrado)
+   - TableLines: "rgba(224,224,224,1)" → Bordas da tabela
+
+   PaletteDark (Tema Escuro):
+   - Background: "rgba(50,51,61,1)" → Fundo escuro da tabela
+   - BackgroundGray: "rgba(39,39,47,1)" → Fundo do cabeçalho
+   - TextPrimary: "#849eb8" → Texto claro
+   - TableHover: (não definido, usa padrão) → Hover no escuro
+   - TableStriped: "rgba(255,255,255,0.2)" → Linhas alternadas
+   ======================================== */
+
+
+/*
+#fcdcb9(atual)-laranja bem clarinho
+#ffd5a8 -laranja um pouco mais intenso
+#ffe4c4 - bege/pêssego claro
+#fff4e6 - laranja quase branco
+*/

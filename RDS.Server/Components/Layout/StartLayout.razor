@@ -1,0 +1,59 @@
+﻿@using RDS.Server.Services
+@inherits LayoutComponentBase
+@inject ThemeService ThemeService
+@implements IDisposable
+
+<MudThemeProvider @ref="_mudThemeProvider"
+                  Theme="ConfigurationTheme.Theme"
+                  IsDarkMode="@ThemeService.IsDarkMode"/>
+<MudPopoverProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<div class="page-container">
+    <main>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private MudThemeProvider? _mudThemeProvider;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChangedHandler;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await ThemeService.InitializeAsync();
+
+            // Verifica se o provider foi inicializado
+            if (_mudThemeProvider != null)
+            {
+                await _mudThemeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+            }
+
+            StateHasChanged();
+        }
+    }
+
+    private void OnThemeChangedHandler()
+    {
+        StateHasChanged();
+    }
+
+    private async Task OnSystemPreferenceChanged(bool newValue)
+    {
+        await ThemeService.SetThemeAsync(newValue);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeChangedHandler;
+    }
+}

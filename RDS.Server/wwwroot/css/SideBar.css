@@ -1,0 +1,215 @@
+.sidebar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    z-index: 1000;
+    background: #232938;
+    overflow-y: auto;
+    border-right: 1px solid #222;
+    transition: transform 0.3s cubic-bezier(.77,0,.18,1), box-shadow 0.3s;
+}
+
+/* Estados da sidebar */
+.sidebar-closed {
+    transform: translateX(-100%);
+    box-shadow: none !important;
+}
+
+.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 2px 0 16px rgba(0,0,0,0.18);
+}
+
+/* Backdrop para mobile */
+.sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.30);
+    z-index: 999;
+    animation: fadeIn 0.2s;
+}
+
+.sidebar-backdrop.show {
+    display: block;
+}
+
+/* Conteúdo principal - ajusta baseado no estado da sidebar */
+.content-with-sidebar {
+    padding: 2rem;
+    transition: margin-left 0.3s cubic-bezier(.77,0,.18,1);
+    margin-left: 0; /* Padrão sem margin */
+}
+
+/* Desktop: conteúdo com sidebar aberta */
+@media (min-width: 992px) {
+    .content-with-sidebar.sidebar-is-open {
+        margin-left: 250px;
+    }
+
+    /* Quando sidebar está fechada, conteúdo fica centralizado */
+    .content-with-sidebar.sidebar-is-closed {
+        margin-left: 0;
+    }
+}
+
+/* Mobile e tablet */
+@media (max-width: 992px) {
+    .sidebar-fixed {
+        width: 280px; /* Ligeiramente maior para melhor UX mobile */
+    }
+
+    /* No mobile, sidebar sempre inicia fechada */
+    .sidebar-fixed:not(.sidebar-open) {
+        transform: translateX(-100%);
+    }
+
+    /* Conteúdo sempre sem margin no mobile */
+    .content-with-sidebar {
+        margin-left: 0 !important;
+        padding: 1.2rem;
+    }
+
+    /* Backdrop aparece quando sidebar está aberta no mobile */
+    .sidebar-open ~ .sidebar-backdrop {
+        display: block;
+    }
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Classes utilitárias para JavaScript */
+.sidebar-auto-hide {
+    /* Classe para indicar que a sidebar deve se ocultar automaticamente em mobile */
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar-fixed,
+    .content-with-sidebar,
+    .sidebar-backdrop {
+        transition: none;
+        animation: none;
+    }
+}
+
+
+
+/*
+!* Sidebar fixa (desktop) *!
+.sidebar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    z-index: 1000;
+    background: #232938;
+    overflow-y: auto;
+    border-right: 1px solid #222;
+    transition: transform 0.2s;
+}
+
+.content-with-sidebar {
+    margin-left: 250px;
+    padding: 2rem;
+    transition: margin-left 0.2s;
+}
+
+!* --- Mobile adjustments --- *!
+@media (max-width: 991.98px) {
+    .sidebar-fixed {
+        !* Sidebar some e só aparece se ativada *!
+        transform: translateX(-100%);
+        width: 220px; !* pode ser menor para o mobile *!
+        !* sobrepor conteúdo *!
+        box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+    }
+    .sidebar-fixed.sidebar-open {
+        !* Se aberta, volta para posição original *!
+        transform: translateX(0);
+    }
+    .content-with-sidebar {
+        margin-left: 0;
+        padding: 1rem;
+    }
+    .sidebar-backdrop {
+        !* Sombra de fundo ao abrir sidebar *!
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.35);
+        z-index: 999;
+    }
+}
+*/
+/*
+
+!* V2*!
+.sidebar-fixed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    z-index: 1000;
+    background: #232938;
+    overflow-y: auto;
+    border-right: 1px solid #222;
+    transition: transform 0.3s cubic-bezier(.77,0,.18,1), box-shadow 0.3s;
+}
+
+.sidebar-closed {
+    !* Esconde totalmente a sidebar no mobile *!
+    transform: translateX(-100%);
+    box-shadow: none !important;
+    margin-left: 0 !important;
+}
+
+.sidebar-open {
+    transform: translateX(0);
+    box-shadow: 2px 0 16px rgba(0,0,0,0.18);
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+.content-with-sidebar {
+    margin-left: 250px;
+    padding: 2rem;
+    transition: margin-left 0.2s;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar-fixed {
+        width: 220px;
+        !* Sempre sobreposta no mobile *!
+        margin-left: 0 !important;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+    }
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.30);
+        z-index: 999;
+        animation: fadeIn 0.2s;
+    }
+    .content-with-sidebar {
+        margin-left: 0 !important;
+        padding: 1.2rem;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+*/

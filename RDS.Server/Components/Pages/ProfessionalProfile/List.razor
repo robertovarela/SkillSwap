@@ -1,0 +1,315 @@
+﻿@page "/ProfessionalProfiles"
+
+@rendermode InteractiveServer
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using RDS.Core.Dtos.ProfessionalProfile
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Models
+@using RDS.Core.Utils
+@using RDS.Server.Components.Shared
+
+@inject IUserContextService UserContext
+@inject NavigationManager NavigationManager
+@inject IProfessionalProfileService Service
+@inject UserManager<ApplicationUser> UserManager
+@inject IDialogService DialogService
+@inject CultureHelper CultureHelper
+
+@attribute [Authorize]
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Medium">
+    <div class="d-flex justify-space-between align-center mb-6 gap-4 flex-wrap">
+        <div>
+            <MudText Typo="Typo.h4" Class="mb-0">@Title</MudText>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme mt-1">
+                Gerencie seu perfil profissional para se conectar com outros usuários
+            </MudText>
+        </div>
+
+        @*Se utilizará cuando se habilite el uso de perfiles múltiples.*@
+        <MudTooltip Text="Só é permitido 1 perfil profissional por usuário" Disabled="@(!_disableAddButton)">
+            <MudButton Variant="Variant.Filled"
+                       Class="text-primary-theme"
+                       Size="Size.Medium"
+                       StartIcon="Icons.Material.Filled.Add"
+                       OnClick="@CreateEntity"
+                       Disabled="@_disableAddButton">
+                Criar Perfil
+            </MudButton>
+        </MudTooltip>
+    </div>
+
+    <AlertDefault
+        ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+        NavigateToInstructions="UserContext.NavigateToInstructions"
+        NavigateToLogin="UserContext.NavigateToLogin"/>
+
+    @if (_showContent)
+    {
+        @if (_isLoading)
+        {
+            <div class="d-flex justify-center pa-8">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+            </div>
+        }
+        else if (_entities.Any())
+        {
+            <MudGrid Justify="Justify.Center">
+                @foreach (var entity in _entities)
+                {
+                    <MudItem xs="12">
+                        <MudCard>
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-start mb-4">
+                                    <div class="d-flex align-center">
+                                        <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mr-4">
+                                            @(entity.ProfessionalName.Length > 0 ? entity.ProfessionalName[..1].ToUpper() : "C")
+                                        </MudAvatar>
+                                        <div>
+                                            <MudText Typo="Typo.h5">@entity.ProfessionalName</MudText>
+                                            <MudText Typo="Typo.body2" Class="text-secondary-theme">
+                                                @(_userEmails.GetValueOrDefault(entity.UserId.ToString(), "E-mail não encontrado"))
+                                            </MudText>
+                                            <MudChip T="decimal" Icon="@Icons.Material.Filled.MonetizationOn" Color="Color.Success" Variant="Variant.Text" Class="px-0">
+                                                <b>Saldo:</b> @entity.SkillDolarBalance.ToString("C2", CultureHelper.SkillDollarCulture)
+                                            </MudChip>
+                                        </div>
+                                    </div>
+                                    @if (entity.IsPremium)
+                                    {
+                                        <MudChip T="string" Icon="Icons.Material.Filled.Star" Color="Color.Warning" Variant="Variant.Outlined">Premium</MudChip>
+                                    }
+                                </div>
+
+                                <MudDivider Class="my-4"/>
+
+                                <MudText Typo="Typo.h6" Class="mb-2">Informações Pessoais</MudText>
+                                <MudList T="string" clickable="false" Dense="true">
+                                    @if (!string.IsNullOrWhiteSpace(entity.Cpf))
+                                    {
+                                        <MudListItem T="string" icon="@Icons.Material.Filled.Fingerprint" Text="@($"CPF: {entity.Cpf}")" />
+                                    }
+                                    <MudListItem T="string" icon="@Icons.Material.Filled.Cake" Text="@($"Nascimento: {entity.BirthDate.ToString("dd/MM/yyyy")}")" />
+                                </MudList>
+
+                                <MudDivider Class="my-4"/>
+
+                                <MudText Typo="Typo.h6" Class="mb-2">Informações Acadêmicas</MudText>
+                                <MudList T="string" clickable="false" Dense="true">
+                                    @if (!string.IsNullOrWhiteSpace(entity.TeachingInstitution))
+                                    {
+                                        <MudListItem T="string" Icon="@Icons.Material.Filled.School" Text="@($"Instituição: {entity.TeachingInstitution}")" />
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(entity.AcademicRegistry))
+                                    {
+                                        <MudListItem T="string" Icon="@Icons.Material.Filled.ConfirmationNumber" Text="@($"RA: {entity.AcademicRegistry}")" />
+                                    }
+                                </MudList>
+
+                                <MudDivider Class="my-4"/>
+
+                                <MudText Typo="Typo.h6" Class="mb-2">Informações Profissionais</MudText>
+                                <MudList T="string" clickable="false" Dense="true">
+                                    <MudListItem T="string" Icon="@Icons.Material.Filled.Description">
+                                        <div>
+                                            <MudText Typo="Typo.subtitle2">Biografia</MudText>
+                                            <MudText Typo="Typo.body2" Class="text-secondary-theme">
+                                                @(string.IsNullOrWhiteSpace(entity.Bio) ? "Nenhuma biografia fornecida." : entity.Bio)
+                                            </MudText>
+                                        </div>
+                                    </MudListItem>
+                                    <MudListItem T="string" icon="@Icons.Material.Filled.Star">
+                                        <div>
+                                            <MudText Typo="Typo.subtitle2">Especialidades</MudText>
+                                            <MudText Typo="Typo.body2" Class="text-secondary-theme">
+                                                @(string.IsNullOrWhiteSpace(entity.Expertise) ? "Nenhuma especialidade informada." : entity.Expertise)
+                                            </MudText>
+                                        </div>
+                                    </MudListItem>
+                                </MudList>
+
+                            </MudCardContent>
+
+                            <MudCardActions Class="d-flex justify-end pa-4 pt-0">
+                                <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                                    <MudButton Color="Color.Primary"
+                                               StartIcon="Icons.Material.Filled.Edit"
+                                               OnClick="@(() => EditEntity(entity.Id))">
+                                        Editar
+                                    </MudButton>
+                                    <MudButton Color="Color.Error"
+                                               StartIcon="Icons.Material.Filled.Delete"
+                                               OnClick="@(() => ShowDeleteConfirmation(entity))">
+                                        Excluir
+                                    </MudButton>
+                                </MudButtonGroup>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        else
+        {
+            <MudGrid Justify="Justify.Center">
+                <MudItem xs="12">
+                    <MudPaper Class="pa-8 text-center" Elevation="0">
+                        <MudIcon Icon="Icons.Material.Outlined.PersonAdd"
+                                 Size="Size.Large"
+                                 Color="Color.Secondary"
+                                 Class="mb-4"/>
+                        <MudText Typo="Typo.h6" Class="mb-2">
+                            Nenhum perfil profissional encontrado
+                        </MudText>
+                        <MudText Typo="Typo.body1" Class="mb-4 text-secondary-theme">
+                            Você ainda não criou seu perfil. Crie um agora para começar a interagir na plataforma.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="Icons.Material.Filled.Add"
+                                   OnClick="@CreateEntity">
+                            Criar Meu Perfil
+                        </MudButton>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+    }
+</MudContainer>
+
+@code {
+    private long _userId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+    private bool _isLoading = true;
+
+    private IEnumerable<ProfessionalProfileDto> _entities = [];
+    private readonly Dictionary<string, string> _userEmails = new();
+
+    private const string Title = "Perfil Profissional";
+    private bool _disableAddButton = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await DefaultInitializationAsync();
+            if (_showContent)
+            {
+                await LoadDataWithEmailsAsync();
+            }
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        _userId = context.UserId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = false;
+        // Ajuste temporal para cuando se cree la página Administrador de perfiles.
+        //_showContent = context.ShowContent;
+        _showContent = true;
+    }
+
+    private async Task LoadDataWithEmailsAsync()
+    {
+        try
+        {
+            var profile = await Service.GetByUserIdAsync(_userId);
+            _entities = profile is null ? [] : [profile];
+
+            _userEmails.Clear();
+
+            var professionalProfiles = _entities as ProfessionalProfileDto[] ?? _entities.ToArray();
+            if (professionalProfiles.Any())
+            {
+                var userIds = professionalProfiles
+                    .Select(p => p.UserId.ToString())
+                    .Distinct()
+                    .ToList();
+
+                foreach (var userId in userIds)
+                {
+                    var user = await UserManager.FindByIdAsync(userId);
+                    _userEmails[userId] = user?.Email ?? "Usuário não encontrado";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading profiles or emails: {ex.Message}");
+            _entities = [];
+            _userEmails.Clear();
+        }
+        finally
+        {
+            CheckAndUpdateDisableButton();
+        }
+    }
+
+    private void EditEntity(long entityId)
+    {
+        NavigationManager.NavigateTo($"{AppRoutes.ProfesionalProfilesEdit.Replace("{id}", entityId.ToString())}");
+    }
+
+    private void CreateEntity()
+    {
+        NavigationManager.NavigateTo($"{AppRoutes.ProfesionalProfilesCreate}");
+    }
+
+    private async Task ShowDeleteConfirmation(ProfessionalProfileDto entity)
+    {
+        if (entity.HasAssociatedServices)
+        {
+            var alertParams = new DialogParameters<AlertDialog>
+            {
+                { x => x.ContentText, "Este perfil não pode ser excluído pois está associado a um ou mais serviços." },
+                { x => x.ButtonText, "OK" },
+                { x => x.Color, Color.Error }
+            };
+            var alertOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.ShowAsync<AlertDialog>("Exclusão não permitida", alertParams, alertOptions);
+        }
+        else
+        {
+            var parameters = new DialogParameters<ConfirmDeleteDialog>
+            {
+                { x => x.ContentText, $"Deseja realmente excluir o seu perfil profissional '{entity.ProfessionalName}'? Esta ação não pode ser desfeita." },
+                { x => x.ButtonText, "Excluir" },
+                { x => x.Color, Color.Error }
+            };
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Confirmar Exclusão", parameters, options);
+            var result = await dialog.Result;
+
+            if (result is { Canceled: false })
+            {
+                await ConfirmDelete(entity.Id);
+            }
+        }
+    }
+
+    private async Task ConfirmDelete(long entityId)
+    {
+        await Service.DeleteAsync(entityId);
+        await UserContext.InitializeUserContextAsync(); // Re-initialize context to reflect the deletion
+        await LoadDataWithEmailsAsync();
+    }
+
+    private void CheckAndUpdateDisableButton()
+    {
+        _disableAddButton = _entities.Any();
+        StateHasChanged();
+    }
+
+}

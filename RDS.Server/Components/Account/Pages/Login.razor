@@ -1,0 +1,165 @@
+﻿@page "/Account/Login"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using RDS.Core.Models
+@layout AccountLayout
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject ILogger<Login> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Acessar</PageTitle>
+
+<MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">Acesse sua conta</MudText>
+<MudText Typo="Typo.body2" Align="Align.Center" Class="mb-4">Bem-vindo(a) de volta!</MudText>
+
+@if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">@_errorMessage</MudAlert>
+}
+
+<EditForm Model="Input" method="post" OnValidSubmit="LoginUser" FormName="login">
+    <DataAnnotationsValidator/>
+
+    <MudStack Spacing="3">
+        <MudStaticTextField For="@(() => Input.Email)"
+                            @bind-Value="Input.Email"
+                            Label="E-mail"
+                            Placeholder="nome@exemplo.com"
+                            Variant="Variant.Outlined"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.Email"
+                            UserAttributes="@(new() { { "autocomplete", "username" }, { "aria-required", "true" } })"/>
+
+        <MudStaticTextField For="@(() => Input.Password)"
+                            @bind-Value="Input.Password"
+                            Label="Senha"
+                            InputType="InputType.Password"
+                            Placeholder="Digite sua senha"
+                            Variant="Variant.Outlined"
+                            Adornment="Adornment.Start"
+                            AdornmentIcon="@Icons.Material.Filled.Lock"
+                            UserAttributes="@(new() { { "autocomplete", "current-password" }, { "aria-required", "true" } })"/>
+
+        <div class="d-flex justify-space-between align-center">
+            <MudStaticCheckBox For="@(() => Input.RememberMe)"
+                               @bind-Value="Input.RememberMe"
+                               Color="Color.Primary">
+                Lembrar-me
+            </MudStaticCheckBox>
+
+            <MudLink Href="Account/ForgotPassword">Esqueceu a senha?</MudLink>
+        </div>
+
+        <MudStaticButton Variant="Variant.Filled"
+                         Color="Color.Primary"
+                         Size="Size.Large"
+                         FullWidth="true"
+                         FormAction="FormAction.Submit">
+            @if (_isSubmitting)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true"/>
+                <span>Acessando...</span>
+            }
+            else
+            {
+                <span>Acessar</span>
+            }
+        </MudStaticButton>
+    </MudStack>
+</EditForm>
+
+<div class="mt-4">
+    <ExternalLoginPicker/>
+</div>
+
+<MudDivider Class="my-4"/>
+
+<MudText Align="Align.Center">
+    Não tem uma conta?
+    <MudLink Href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))">
+        Registre-se
+    </MudLink>
+</MudText>
+
+<MudText Align="Align.Center" Class="mt-2">
+    <MudLink Href="/Account/ResendEmailConfirmation">Reenviar e-mail de confirmação</MudLink>
+</MudText>
+
+@code {
+    private string? _errorMessage;
+    private bool _isSubmitting;
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HttpMethods.IsGet(HttpContext.Request.Method))
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+        }
+    }
+
+    public async Task LoginUser()
+    {
+        _isSubmitting = true;
+
+        try
+        {
+            ReturnUrl ??= "/start";
+
+            // This doesn't count login failures towards account lockout
+            // To enable password failures to trigger account lockout, set lockoutOnFailure: true
+            var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
+            if (result.Succeeded)
+            {
+                Logger.LogInformation("User logged in.");
+                RedirectManager.RedirectTo(ReturnUrl);
+            }
+            else if (result.RequiresTwoFactor)
+            {
+                RedirectManager.RedirectTo(
+                    "Account/LoginWith2fa",
+                    new() { ["returnUrl"] = ReturnUrl, ["rememberMe"] = Input.RememberMe });
+            }
+            else if (result.IsLockedOut)
+            {
+                Logger.LogWarning("User account locked out.");
+                RedirectManager.RedirectTo("Account/Lockout");
+            }
+            else
+            {
+                _errorMessage = "Erro: Tentativa de login inválida.";
+            }
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private sealed class InputModel
+    {
+        [Required(ErrorMessage = "O e-mail é obrigatório.")]
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "A senha é obrigatória.")]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = "";
+
+        [Display(Name = "Lembrar-me?")]
+        public bool RememberMe { get; set; }
+    }
+}

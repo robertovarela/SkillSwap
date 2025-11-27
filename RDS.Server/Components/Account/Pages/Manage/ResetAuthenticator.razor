@@ -1,0 +1,65 @@
+﻿@page "/Account/Manage/ResetAuthenticator"
+@layout AccountLayout
+
+@using Microsoft.AspNetCore.Identity
+@using RDS.Core.Models
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IdentityUserAccessor UserAccessor
+@inject IdentityRedirectManager RedirectManager
+@inject ILogger<ResetAuthenticator> Logger
+
+<PageTitle>Redefinir chave do autenticador</PageTitle>
+
+<MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">Redefinir Chave do Autenticador</MudText>
+
+<StatusMessage />
+
+<div class="mt-4">
+    <MudAlert Severity="Severity.Warning" Class="mb-4">
+        <MudText Typo="Typo.body1" Class="mb-2"><strong>Se você redefinir sua chave de autenticação, seu aplicativo autenticador não funcionará até que você o reconfigure.</strong></MudText>
+        <MudText Typo="Typo.body2">Este processo desabilita a 2FA até que você verifique seu aplicativo autenticador. Se você não concluir a configuração do seu aplicativo autenticador, poderá perder o acesso à sua conta.</MudText>
+    </MudAlert>
+
+    <form @formname="reset-authenticator" @onsubmit="OnSubmitAsync" method="post">
+        <AntiforgeryToken />
+        <MudStaticButton Variant="Variant.Filled"
+                         Color="Color.Error"
+                         FullWidth="true"
+                         FormAction="FormAction.Submit">
+            Redefinir chave do autenticador
+        </MudStaticButton>
+    </form>
+</div>
+
+<MudDivider Class="my-4"/>
+
+<MudButton Variant="Variant.Text"
+           Color="Color.Default"
+           StartIcon="@Icons.Material.Filled.ArrowBack"
+           Href="/Account/Manage/TwoFactorAuthentication"
+           FullWidth="true">
+    Voltar para 2FA
+</MudButton>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private async Task OnSubmitAsync()
+    {
+        var user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        await UserManager.SetTwoFactorEnabledAsync(user, false);
+        await UserManager.ResetAuthenticatorKeyAsync(user);
+        var userId = await UserManager.GetUserIdAsync(user);
+        Logger.LogInformation("Usuário com ID '{UserId}' redefiniu sua chave de aplicativo de autenticação.", userId);
+
+        await SignInManager.RefreshSignInAsync(user);
+
+        RedirectManager.RedirectToWithStatus(
+            "Account/Manage/EnableAuthenticator",
+            "A chave do seu aplicativo autenticador foi redefinida, você precisará configurar seu aplicativo autenticador usando a nova chave.",
+            HttpContext);
+    }
+}

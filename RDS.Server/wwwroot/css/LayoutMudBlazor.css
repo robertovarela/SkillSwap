@@ -1,0 +1,115 @@
+/* Estilización del logotipo */
+@font-face {
+    font-family: 'Rainmore';
+    src: url('../fonts/rainmoreregular.woff2') format('woff2'),
+    url('../fonts/rainmoreregular.woff') format('woff');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+.logo-area {
+    background-image: linear-gradient(180deg, #1E293B 0%, #0F172A 100%); /* fondo del logotipo */
+    border-bottom: 2px solid #d65b26; /* borde naranja */
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    height: 53px;
+}
+
+.logo-area a:hover {
+    text-decoration: none;
+}
+
+.logo-text {
+    font-family: 'Rainmore', sans-serif;
+    font-size: 32px;
+    font-weight: 1000;
+    color: #000000;
+    text-shadow: -1px -1px 0 #ffffff,
+    1px -1px 0 #ffffff,
+    -1px 1px 0 #ffffff,
+    1px 1px 0 #ffffff;
+}
+
+.logo-text-large {
+    font-size: 65px;
+    padding: 0;
+    margin: 0;
+}
+
+.logo-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-left: 6px;
+    background-color: #d65b26;
+    border-radius: 50%;
+    position: relative;
+    top: 5px;
+}
+
+.logo-dot-large {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    margin-left: 0;
+    background-color: #d65b26;
+    border-radius: 50%;
+    position: relative;
+    top: 5px;
+}
+
+.mud-paper-principal {
+    background-color: #0F172A; /* Fondo del área principal */
+    color: #FFFFFF; /* Color del texto */
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.mud-container-body {
+    height: calc(100vh - 5px);
+    overflow: hidden;
+    padding: 73px 10px 35px;
+}
+
+.mud-paper-body {
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+.div-body {
+    height: 100%;
+    width: 100%;
+    border-radius: 24px;
+    padding: 2px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.gapped-tabs .mud-tab {
+    margin: 0 8px;
+}
+
+.title-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 3em;
+}
+
+.description-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 4.5em;
+}

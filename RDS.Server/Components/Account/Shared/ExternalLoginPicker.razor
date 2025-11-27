@@ -1,0 +1,81 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Identity
+@using RDS.Core.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@*@inject IdentityRedirectManager RedirectManager*@
+
+@if (_externalLogins.Length == 0)
+{
+    <div>
+        <p>
+            Não há serviços de autenticação externa configurados.
+            Consulte este <a href="https://go.microsoft.com/fwlink/?LinkID=532715"> artigo para saber como configurar
+                esse aplicativo ASP.NET para oferecer suporte ao login por meio de serviços externos.
+            </a>
+        </p>
+    </div>
+}
+else
+{
+  <form class="form-horizontal" action="@LinkToLoginPath" method="post">
+        <div>
+            <AntiforgeryToken/>
+            <input type="hidden" name="ReturnUrl" value="@ReturnUrl"/>
+            <p>
+                @foreach (var provider in _externalLogins)
+                {
+                    if (provider.Name == "Google")
+                    {
+                        <button type="submit" name="provider" value="@provider.Name"
+                                class="btn btn-light border mx-1"
+                                title="Acessar usando sua conta @provider.DisplayName">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg"
+                                 alt="Google" width="20" height="20" style="vertical-align: middle;" />
+                        </button>
+                    }
+                    else if (provider.Name == "Facebook")
+                    {
+                        <button type="submit" name="provider" value="@provider.Name"
+                                class="btn btn-light border mx-1"
+                                title="Acessar usando sua conta @provider.DisplayName">
+                            <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/facebook/facebook-original.svg"
+                                 alt="Facebook" width="20" height="20" style="vertical-align: middle;" />
+                        </button>
+                    }
+                    else if (provider.Name == "Microsoft")
+                    {
+                        <button type="submit" name="provider" value="@provider.Name"
+                                class="btn btn-light border mx-1"
+                                title="Acessar usando sua conta @provider.DisplayName">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
+                                 alt="Microsoft" width="20" height="20" style="vertical-align: middle;" />
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" name="provider" value="@provider.Name"
+                                class="btn btn-light border mx-1"
+                                title="Acessar com @provider.DisplayName">
+                            <span>@provider.DisplayName</span>
+                        </button>
+                    }
+                }
+
+            </p>
+        </div>
+    </form>
+}
+
+@code {
+    private AuthenticationScheme[] _externalLogins = [];
+    private const string LinkToLoginPath = "Account/PerformExternalLogin";
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _externalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).ToArray();
+    }
+}

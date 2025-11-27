@@ -1,0 +1,32 @@
+﻿@page "/Auth-Test"
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+@attribute [Authorize]
+
+<h1>Teste de Autenticação</h1>
+
+@if (_message != null)
+{
+    <p>@_message</p>
+}
+else
+{
+    <p>Carregando...</p>
+}
+
+@code {
+    private string? _message;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _message = await Http.GetStringAsync("api/test/secure"); // Substitua pelo seu endpoint
+        }
+        catch (Exception ex)
+        {
+            _message = "Erro: " + ex.Message;
+        }
+    }
+
+}

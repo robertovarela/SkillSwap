@@ -1,0 +1,400 @@
+﻿@page "/ServicesOffered"
+
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@inject IJSRuntime Js
+@inject IUserContextService UserContext
+@inject NavigationManager NavigationManager
+@inject IServiceOfferedService ServiceOfferedService
+@inject IDialogService DialogService
+@inject ICategoryService CategoryService
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.ServiceOffered
+@using RDS.Core.Enums
+@using RDS.Core.Libraries.Services
+@using RDS.Core.Requests
+@using RDS.Core.Utils
+@implements IDisposable
+@using RDS.Core.Dtos.Category
+@using RDS.Server.Components.Shared
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Medium">
+    <div class="d-flex justify-space-between align-center mb-6 gap-4 flex-wrap">
+        <div>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h4" Class="mb-0">@Title</MudText>
+                <MudChip T="string"
+                         Text="@($"{PagedResult.TotalCount}")"
+                         Color="Color.Info"
+                         Size="Size.Small"
+                         Variant="Variant.Filled"
+                         Class="mt-1"/>
+            </div>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme mt-1">
+                Gerencie os serviços que você oferece na plataforma
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Medium"
+                   StartIcon="Icons.Material.Filled.Add"
+                   OnClick="@CreateEntity">
+            Novo Serviço
+        </MudButton>
+    </div>
+
+    <MudPaper Class="pa-3 mb-6 mx-auto" Elevation="2" Width="90%">
+        <MudGrid Spacing="2" AlignItems="AlignItems.Center"  Justify="Justify.Center">
+            <MudItem xs="10">
+                <MudTextField T="string"
+                              id="serviceOfferedSearch"
+                              Placeholder="Buscar por título ou descrição..."
+                              Value="@Filter.Search"
+                              Label="Buscar"
+                              Immediate="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="Icons.Material.Filled.Search"/>
+            </MudItem>
+            <MudItem xs="10">
+                <MudSelect T="long?"
+                           Value="Filter.CategoryId"
+                           ValueChanged="OnCategoryChanged"
+                           Label="Filtrar por Área de Atuação"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Adornment="Adornment.Start"
+                           AdornmentIcon="Icons.Material.Filled.Category"
+                           Clearable="true"
+                           OnClearButtonClick="@(async () => await OnCategoryChanged(null))">
+                    @foreach (var category in _categories)
+                    {
+                        <MudSelectItem T="long?" Value="@category.Id">@category.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="10">
+                <MudSelect T="ServiceOrderType"
+                           Value="@GetCurrentOrderEnum()"
+                           ValueChanged="OnOrderEnumChanged"
+                           Label="Ordenar por"
+                           Variant="Variant.Outlined"
+                           Margin="Margin.Dense"
+                           Adornment="Adornment.Start"
+                           AdornmentIcon="Icons.Material.Filled.Sort">
+                    <MudSelectItem T="ServiceOrderType" Value="@ServiceOrderType.NewestFirst">Mais Recentes</MudSelectItem>
+                    <MudSelectItem T="ServiceOrderType" Value="@ServiceOrderType.OldestFirst">Mais Antigos</MudSelectItem>
+                    <MudSelectItem T="ServiceOrderType" Value="@ServiceOrderType.TitleAsc">Título A-Z</MudSelectItem>
+                    <MudSelectItem T="ServiceOrderType" Value="@ServiceOrderType.TitleDesc">Título Z-A</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <AlertDefault
+        ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+        NavigateToInstructions="UserContext.NavigateToInstructions"
+        NavigateToLogin="UserContext.NavigateToLogin"/>
+
+    @if (_showContent)
+    {
+        @if (_isLoading)
+        {
+            <div class="d-flex justify-center pa-8">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+            </div>
+        }
+        else if (PagedResult.Items.Any())
+        {
+            <MudGrid Justify="Justify.Center">
+                @foreach (var entity in PagedResult.Items)
+                {
+                    <MudItem xs="11">
+                        <MudCard Class="mud-height-full">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-start mb-3">
+                                    <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                                        @(entity.Title.Length > 0 ? entity.Title.Substring(0, 1).ToUpper() : "C")
+                                    </MudAvatar>
+                                    <MudChip T="string"
+                                             Text="@($"#{entity.Id}")"
+                                             Size="Size.Small"
+                                             Variant="Variant.Text"
+                                             Color="Color.Default"/>
+                                </div>
+
+                                <MudLink OnClick="@(() => ShowServiceDetails(entity))"
+                                         Typo="Typo.h6"
+                                         Color="Color.Default"
+                                         Underline="Underline.Hover"
+                                         Class="mb-2 d-block title-clamp">
+                                    @entity.Title
+                                </MudLink>
+
+                                <MudLink OnClick="@(() => ShowServiceDetails(entity))"
+                                         Typo="Typo.body2"
+                                         Color="Color.Default"
+                                         Underline="Underline.Hover"
+                                         Class="mb-2mud-text-secondary description-clamp">
+                                    @entity.Description
+                                </MudLink>
+
+                                <MudText Typo="Typo.caption" Class="text-secondary-theme">
+                                    Criado em: @entity.CreatedAt.ToString("dd/MM/yyyy")
+                                </MudText>
+                            </MudCardContent>
+
+                            <MudCardActions Class="d-flex justify-end flex-wrap gap-2 pa-4 pt-0">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary"
+                                           StartIcon="Icons.Material.Filled.Edit"
+                                           OnClick="@(() => EditEntity(entity.Id))">
+                                    Editar
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Error"
+                                           StartIcon="Icons.Material.Filled.Delete"
+                                           OnClick="@(() => ShowDeleteConfirmation(entity))">
+                                    Excluir
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <div class="d-flex justify-center mt-6">
+                <MudPagination Count="@TotalPages"
+                               SelectedChanged="GoToPage"
+                               Selected="Filter.PageNumber"
+                               Color="Color.Primary"
+                               Size="Size.Large"
+                               ShowFirstButton="true"
+                               ShowLastButton="true"/>
+            </div>
+        }
+        else
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <MudIcon Icon="Icons.Material.Outlined.WorkOff"
+                         Size="Size.Large"
+                         Color="Color.Secondary"
+                         Class="mb-4"/>
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    Nenhum serviço encontrado
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mb-4 text-secondary-theme">
+                    @(string.IsNullOrWhiteSpace(Filter.Search)
+                        ? "Comece adicionando seu primeiro serviço oferecido."
+                        : "Tente ajustar os filtros de busca.")
+                </MudText>
+                @if (string.IsNullOrWhiteSpace(Filter.Search))
+                {
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="Icons.Material.Filled.Add"
+                               OnClick="@CreateEntity">
+                        Adicionar Primeiro Serviço
+                    </MudButton>
+                }
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+    //private long _userId;
+    private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+
+    private IEnumerable<CategoryDto> _categories = [];
+    private const string Title = "Meus Serviços Oferecidos";
+
+    private FilterParams Filter { get; set; } = new() { PageSize = ConfigurationServer.PageSize, PageNumber = 1 };
+    private PaginatedResult<ServiceOfferedDto> PagedResult { get; set; } = new();
+    private int TotalPages => (int)Math.Ceiling((double)(PagedResult.TotalCount) / Filter.PageSize);
+    private bool _isLoading = true;
+
+    private DotNetObjectReference<List>? _dotNetRef;
+    private bool _disposed;
+
+    protected override async Task OnInitializedAsync() {
+        // Definir ordenação padrão se não estiver definida
+        if (string.IsNullOrEmpty(Filter.OrderBy))
+        {
+            Filter.OrderBy = "createdat";
+            Filter.OrderDir = "desc"; // Mais recentes primeiro
+        }
+
+        await DefaultInitializationAsync();
+        await LoadCategoriesAsync();
+        await LoadDataAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender) {
+        if (firstRender) {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await Js.InvokeVoidAsync("debounceInput", _dotNetRef, "serviceOfferedSearch", ConfigurationServer.DebounceDelay);
+        }
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        //_userId = context.UserId;
+        _professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = context.ShowProfessionalNotFoundAlert;
+        _showContent = context.ShowContent;
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        _categories = await CategoryService.GetAllAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            PagedResult = await ServiceOfferedService.GetPagedAsync(Filter, _professionalId, false);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    [JSInvokable("OnDebouncedInput")]
+    public async Task OnDebouncedInput(string searchText)
+    {
+        if (_disposed) return;
+        Filter.Search = searchText;
+        Filter.PageNumber = 1;
+
+        await LoadDataAsync();
+        StateHasChanged();
+    }
+
+    private async Task OnOrderEnumChanged(ServiceOrderType newOrderType)
+    {
+        // Mapear o enum para OrderBy e OrderDir
+        (Filter.OrderBy, Filter.OrderDir) = newOrderType switch
+        {
+            ServiceOrderType.NewestFirst => ("createdat", "desc"),
+            ServiceOrderType.OldestFirst => ("createdat", "asc"),
+            ServiceOrderType.TitleAsc => ("title", "asc"),
+            ServiceOrderType.TitleDesc => ("title", "desc"),
+            _ => ("createdat", "desc")
+        };
+
+        Filter.PageNumber = 1; // Resetar para primeira página
+        await LoadDataAsync();
+    }
+
+    private ServiceOrderType GetCurrentOrderEnum()
+    {
+        // Retornar o enum atual baseado em OrderBy e OrderDir
+        return (Filter.OrderBy?.ToLower(), Filter.OrderDir?.ToLower()) switch
+        {
+            ("createdat", "desc") or (null, _) => ServiceOrderType.NewestFirst,
+            ("createdat", "asc") => ServiceOrderType.OldestFirst,
+            ("title", "asc") => ServiceOrderType.TitleAsc,
+            ("title", "desc") => ServiceOrderType.TitleDesc,
+            _ => ServiceOrderType.NewestFirst
+        };
+    }
+
+    private async Task OnCategoryChanged(long? newCategoryId)
+    {
+        Filter.CategoryId = newCategoryId;
+        Filter.PageNumber = 1;
+        await LoadDataAsync();
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        _dotNetRef?.Dispose();
+    }
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1 || page > TotalPages || page == Filter.PageNumber) return;
+        Filter.PageNumber = page;
+        await LoadDataAsync();
+    }
+
+    private void EditEntity(long entityId)
+    {
+        NavigationManager.NavigateTo($"{AppRoutes.ServicesOfferedEdit.Replace("{id}", entityId.ToString())}");
+    }
+
+    private void CreateEntity()
+    {
+        NavigationManager.NavigateTo($"{AppRoutes.ServicesOfferedCreate}");
+    }
+
+    private async Task ShowServiceDetails(ServiceOfferedDto entity)
+    {
+        var parameters = new DialogParameters<ServiceDetailsDialog>
+        {
+            { x => x.Service, entity }
+        };
+
+        var options = new DialogOptions()
+        {
+            CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true
+        };
+        await DialogService.ShowAsync<ServiceDetailsDialog>("", parameters, options);
+    }
+
+    private async Task ShowDeleteConfirmation(ServiceOfferedDto entity)
+    {
+        if (entity.HasProposals)
+        {
+            var parameters = new DialogParameters<AlertDialog>
+            {
+                { x => x.ContentText, "Este serviço não pode ser excluído pois está associado a uma ou mais propostas de troca." },
+                { x => x.ButtonText, "OK" },
+                { x => x.Color, Color.Error }
+            };
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            await DialogService.ShowAsync<AlertDialog>("Exclusão não permitida", parameters, options);
+        }
+        else
+        {
+            var parameters = new DialogParameters<ConfirmDeleteDialog>
+            {
+                { x => x.ContentText, $"Deseja realmente excluir o serviço '{entity.Title}'?" },
+                { x => x.ButtonText, "Excluir" },
+                { x => x.Color, Color.Error }
+            };
+
+            var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+            var dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Confirmar Exclusão", parameters, options);
+            var result = await dialog.Result;
+
+            if (result is { Canceled: false })
+            {
+                await ConfirmDelete(entity.Id);
+            }
+        }
+    }
+
+    private async Task ConfirmDelete(long entityId)
+    {
+        await ServiceOfferedService.DeleteAsync(entityId);
+        await LoadDataAsync();
+    }
+}

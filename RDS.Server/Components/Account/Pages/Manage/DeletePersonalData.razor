@@ -1,0 +1,109 @@
+﻿@page "/Account/Manage/DeletePersonalData"
+ @layout AccountLayout
+
+ @using System.ComponentModel.DataAnnotations
+ @using Microsoft.AspNetCore.Identity
+ @using RDS.Core.Models
+
+ @inject UserManager<ApplicationUser> UserManager
+ @inject SignInManager<ApplicationUser> SignInManager
+ @inject IdentityUserAccessor UserAccessor
+ @inject IdentityRedirectManager RedirectManager
+ @inject ILogger<DeletePersonalData> Logger
+
+ <PageTitle>Excluir Conta</PageTitle>
+
+ <MudText Typo="Typo.h5" Align="Align.Center" GutterBottom="true">Excluir Conta</MudText>
+
+ <StatusMessage Message="@_message" />
+
+ <div class="mt-4">
+     <MudAlert Severity="Severity.Error" Class="mb-4">
+         <strong>A exclusão destes dados irá remover permanentemente sua conta, e isto não poderá ser recuperado.</strong>
+     </MudAlert>
+
+     <EditForm Model="Input" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
+         <DataAnnotationsValidator />
+         <ValidationSummary class="text-danger" role="alert" />
+
+         <MudStack Spacing="3">
+             @if (_requirePassword)
+             {
+                 <MudStaticTextField For="@(() => Input.Password)"
+                                     @bind-Value="Input.Password"
+                                     Label="Senha"
+                                     HelperText="Por favor, digite sua senha para confirmar."
+                                     InputType="InputType.Password"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentIcon="@Icons.Material.Filled.Lock"
+                                     UserAttributes="@(new() { { "autocomplete", "current-password" } })"/>
+             }
+
+             <MudStaticButton Variant="Variant.Filled"
+                              Color="Color.Error"
+                              FullWidth="true"
+                              FormAction="FormAction.Submit">
+                 Excluir dados e fechar minha conta
+             </MudStaticButton>
+         </MudStack>
+     </EditForm>
+ </div>
+
+ <MudDivider Class="my-4"/>
+
+ <MudButton Variant="Variant.Text"
+            Color="Color.Default"
+            StartIcon="@Icons.Material.Filled.ArrowBack"
+            Href="/Account/Manage/PersonalData"
+            FullWidth="true">
+     Voltar
+ </MudButton>
+
+ @code {
+     private string? _message;
+     private ApplicationUser _user = default!;
+     private bool _requirePassword;
+
+     [CascadingParameter]
+     private HttpContext HttpContext { get; set; } = default!;
+
+     [SupplyParameterFromForm]
+     private InputModel Input { get; set; } = new();
+
+     protected override async Task OnInitializedAsync()
+     {
+         _user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+         _requirePassword = await UserManager.HasPasswordAsync(_user);
+     }
+
+     private async Task OnValidSubmitAsync()
+     {
+         if (_requirePassword && !await UserManager.CheckPasswordAsync(_user, Input.Password))
+         {
+             _message = "Erro: Senha incorreta.";
+             return;
+         }
+
+         var result = await UserManager.DeleteAsync(_user);
+         if (!result.Succeeded)
+         {
+             throw new InvalidOperationException("Ocorreu um erro inesperado ao excluir o usuário.");
+         }
+
+         await SignInManager.SignOutAsync();
+
+         var userId = await UserManager.GetUserIdAsync(_user);
+         Logger.LogInformation("Usuário com ID '{UserId}' excluiu a própria conta.", userId);
+
+         RedirectManager.RedirectToCurrentPage();
+     }
+
+     private sealed class InputModel
+     {
+         [Required(ErrorMessage = "A senha é obrigatória para confirmar a exclusão.")]
+         [DataType(DataType.Password)]
+         public string Password { get; set; } = "";
+     }
+
+}

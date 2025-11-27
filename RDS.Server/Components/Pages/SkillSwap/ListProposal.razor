@@ -1,0 +1,273 @@
+﻿@page "/SkillSwap/ListProposal"
+@rendermode InteractiveServer
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using RDS.Core.Dtos.SkillSwapRequest
+@using RDS.Core.Enums
+@using RDS.Core.Libraries.ExtensionMethods
+@using RDS.Core.Libraries.Services
+@implements IDisposable
+
+@inject IUserContextService UserContext
+@inject NavigationManager NavigationManager
+@inject ISkillSwapService SkillSwapService
+@inject ISkillSwapNotificationService NotificationService
+
+<title>@Title</title>
+
+<MudContainer Class="mt-4" MaxWidth="MaxWidth.Medium">
+    <div class="d-flex justify-space-between align-center mb-6 gap-4 flex-wrap">
+        <div>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h4" Class="mb-0">@Title</MudText>
+                <MudChip T="string"
+                         Text="@($"{_entitiesSkillSwap.Count()}")"
+                         Color="Color.Info"
+                         Size="Size.Small"
+                         Variant="Variant.Filled"
+                         Class="mt-1"/>
+            </div>
+            <MudText Typo="Typo.body1" Class="text-secondary-theme mt-1">
+                Acompanhe o status das suas propostas de troca
+            </MudText>
+        </div>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Default"
+                   Size="Size.Large"
+                   StartIcon="Icons.Material.Filled.ArrowBack"
+                   OnClick="@NavigateBack">
+            Voltar
+        </MudButton>
+    </div>
+
+    <AlertDefault
+        ShowProfessionalNotFoundAlert="_showProfessionalNotFoundAlert"
+        ShowCurrentUserNotFoundAlert="_showCurrentUserNotFoundAlert"
+        NavigateToInstructions="UserContext.NavigateToInstructions"
+        NavigateToLogin="UserContext.NavigateToLogin"/>
+
+    @if (_showContent)
+    {
+        @if (_isLoading)
+        {
+            <div class="d-flex justify-center pa-8">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true"/>
+            </div>
+        }
+        else if (_entitiesSkillSwap.Any())
+        {
+            <MudGrid Justify="Justify.Center">
+                @foreach (var entity in _entitiesSkillSwap)
+                {
+                    <MudItem xs="11">
+                        <MudCard Class="mud-height-full">
+                            <MudCardContent>
+                                <div class="d-flex justify-space-between align-start mb-4">
+                                    <div class="d-flex align-center gap-2">
+                                        <MudAvatar Color="Color.Primary" Size="Size.Medium" Variant="Variant.Outlined">
+                                            <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Size="Size.Small"/>
+                                        </MudAvatar>
+                                        <MudText Typo="Typo.h6">Proposta #@entity.Id</MudText>
+                                    </div>
+
+                                    <MudChip T="string"
+                                             Icon="@GetStatusIcon(entity.Status)"
+                                             Color="@GetStatusColor(entity.Status)"
+                                             Variant="Variant.Outlined"
+                                             Size="Size.Small">
+                                        @entity.Status.GetEnumDisplayName()
+                                    </MudChip>
+                                </div>
+
+                                @{
+                                    var isCurrentUserProposer = entity.ProfessionalAId == _professionalId;
+                                }
+
+                                <MudGrid Spacing="2">
+                                    @if (isCurrentUserProposer)
+                                    {
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.caption" Class="text-secondary-theme">VOCÊ OFERECEU:</MudText>
+                                            <MudText Typo="Typo.body1" Class="mb-2"><b>@entity.ServiceBTitle</b></MudText>
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.caption" Class="text-secondary-theme">EM TROCA DE:</MudText>
+                                            <MudText Typo="Typo.body1"><b>@entity.ServiceATitle</b></MudText>
+                                        </MudItem>
+                                    }
+                                    else
+                                    {
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.caption" Class="text-secondary-theme">VOCÊ RECEBEU PROPOSTA PARA:</MudText>
+                                            <MudText Typo="Typo.body1" Class="mb-2"><b>@entity.ServiceATitle</b></MudText>
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudText Typo="Typo.caption" Class="text-secondary-theme">EM TROCA DE:</MudText>
+                                            <MudText Typo="Typo.body1"><b>@entity.ServiceBTitle</b></MudText>
+                                        </MudItem>
+                                    }
+                                </MudGrid>
+
+                                <MudText Typo="Typo.caption" Class="text-secondary-theme d-block mt-4">
+                                    Iniciada em: @entity.SwapDate.ToString("dd/MM/yyyy")
+                                </MudText>
+                            </MudCardContent>
+
+                            <MudCardActions Class="d-flex justify-end flex-wrap gap-2 pa-4 pt-0">
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Default"
+                                           StartIcon="Icons.Material.Filled.Info"
+                                           OnClick="@(() => Details(entity.Id, entity.ProfessionalAId, entity.ProfessionalBId))">
+                                    Detalhes
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Size="Size.Small" Color="Color.Primary"
+                                           StartIcon="Icons.Material.Filled.Edit"
+                                           OnClick="@(() => EditEntity(entity.Id))"
+                                           Disabled="@(!CanPerformAction(entity.Status))">
+                                    Status
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        else
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="0">
+                <MudIcon Icon="Icons.Material.Outlined.Article"
+                         Size="Size.Large"
+                         Color="Color.Secondary"
+                         Class="mb-4"/>
+                <MudText Typo="Typo.h6" Class="mb-2">
+                    Nenhuma proposta encontrada
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mb-4 text-secondary-theme">
+                    Você ainda não fez nenhuma proposta de troca. Explore os serviços disponíveis!
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="Icons.Material.Filled.Search"
+                           OnClick="@NavigateBack">
+                    Encontrar Serviços
+                </MudButton>
+            </MudPaper>
+        }
+    }
+</MudContainer>
+
+@code {
+    //private long _userId;
+    private long _professionalId;
+    private bool _showContent;
+    private bool _showProfessionalNotFoundAlert;
+    private bool _showCurrentUserNotFoundAlert;
+
+    private IEnumerable<SkillSwapRequestDto> _entitiesSkillSwap = [];
+    private bool _isLoading = true;
+    private const string Title = "Minhas Propostas";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await DefaultInitializationAsync();
+        await LoadDataAsync();
+        NotificationService.OnSkillSwapUpdated += HandleSkillSwapUpdated;
+    }
+
+    private async Task DefaultInitializationAsync()
+    {
+        var context = await UserContext.InitializeUserContextAsync();
+        //_userId = context.UserId;
+        _professionalId = context.ProfessionalId;
+        _showCurrentUserNotFoundAlert = context.ShowCurrentUserNotFoundAlert;
+        _showProfessionalNotFoundAlert = context.ShowProfessionalNotFoundAlert;
+        _showContent = context.ShowContent;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            await FetchSkillSwapRequests();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading entities: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task FetchSkillSwapRequests()
+    {
+        _entitiesSkillSwap = await SkillSwapService.GetByProfessionalIdAsync(_professionalId);
+    }
+
+    private async void HandleSkillSwapUpdated(long skillSwapId)
+    {
+        try
+        {
+            await InvokeAsync(async () =>
+            {
+                await FetchSkillSwapRequests();
+                StateHasChanged();
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Erro ao processar atualização de SkillSwap: {e.Message}");
+        }
+    }
+
+    private bool CanPerformAction(StatusSwapRequest status)
+    {
+        return status is StatusSwapRequest.Pending or StatusSwapRequest.Accepted or StatusSwapRequest.Countered or StatusSwapRequest.CompletionPendingA or StatusSwapRequest.CompletionPendingB;
+    }
+
+    private static Color GetStatusColor(StatusSwapRequest status) => status switch
+    {
+        StatusSwapRequest.Pending => Color.Warning,
+        StatusSwapRequest.Countered => Color.Warning,
+        StatusSwapRequest.Accepted => Color.Success,
+        StatusSwapRequest.Rejected => Color.Error,
+        StatusSwapRequest.Completed => Color.Info,
+        //StatusSwapRequest.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+
+    private static string GetStatusIcon(StatusSwapRequest status) => status switch
+    {
+        StatusSwapRequest.Pending => Icons.Material.Filled.HourglassEmpty,
+        StatusSwapRequest.Countered => Icons.Material.Filled.SwapCalls,
+        StatusSwapRequest.Accepted => Icons.Material.Filled.CheckCircle,
+        StatusSwapRequest.Rejected => Icons.Material.Filled.Cancel,
+        StatusSwapRequest.Completed => Icons.Material.Filled.DoneAll,
+        StatusSwapRequest.Cancelled => Icons.Material.Filled.Block,
+        _ => Icons.Material.Filled.Help
+    };
+
+    private void Details(long entityId, long professionalBId, long professionalAId)
+    {
+        NavigationManager.NavigateTo(
+            $"{AppRoutes.SkillSwapRequestsDetailsOffer}"
+                .Replace("{id}", entityId.ToString())
+                .Replace("{ProfessionalBId}", professionalBId.ToString())
+                .Replace("{ProfessionalAId}", professionalAId.ToString()));
+    }
+
+    private void EditEntity(long entityId)
+    {
+        NavigationManager.NavigateTo($"{AppRoutes.SkillSwapRequestsOfferEdit.Replace("{id}", entityId.ToString())}");
+    }
+
+    private void NavigateBack()
+        => NavigationManager.NavigateTo($"{AppRoutes.SkillSwapRequests}");
+
+    public void Dispose()
+    {
+        NotificationService.OnSkillSwapUpdated -= HandleSkillSwapUpdated;
+    }
+}
+```

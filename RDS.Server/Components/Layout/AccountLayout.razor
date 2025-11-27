@@ -1,0 +1,23 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="ConfigurationTheme.Theme"/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<!--suppress CssUnresolvedCustomProperty -->
+<MudContainer MaxWidth="MaxWidth.False" Class="d-flex align-center justify-center mud-height-full mt-4"
+              Style="background-color: var(--mud-palette-background-grey);">
+    <MudPaper Elevation="3" Class="pa-8" Style="width: 100%; max-width: 550px;">
+        <div class="d-flex justify-center mb-4">
+            <MudText Typo="Typo.h4" Style="white-space: nowrap;">
+                <span class="logo-text">SKILLSWAP</span><span class="logo-dot"></span>
+            </MudText>
+        </div>
+        
+        @Body
+        
+        <div class="mt-4 text-center">
+            <MudText Typo="Typo.body2">&copy; @DateTime.Now.Year SkillSwap. Todos os direitos reservados.</MudText>
+        </div>
+    </MudPaper>
+</MudContainer>

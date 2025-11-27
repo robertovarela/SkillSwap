@@ -1,0 +1,36 @@
+﻿@page "/UserNotFound"
+@layout AccountLayout
+
+@rendermode InteractiveServer
+
+<title>@Title</title>
+
+<div class="text-center">
+    <MudIcon Icon="@Icons.Material.Filled.PersonOff" Color="Color.Error" Size="Size.Large" Class="mb-4"/>
+
+    <MudText Typo="Typo.h5" GutterBottom="true">Usuário Não Encontrado</MudText>
+
+    <MudText Typo="Typo.body1" Class="mb-6">
+        A conta de usuário que você está procurando não foi encontrada em nosso sistema.
+    </MudText>
+
+    <MudStack Spacing="2">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   Href="@AppRoutes.Login">
+            Ir para o Login
+        </MudButton>
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   Href="@AppRoutes.Register">
+            Criar uma Conta
+        </MudButton>
+    </MudStack>
+</div>
+
+@code {
+    private const string Title = "Usuário Não Encontrado";
+}

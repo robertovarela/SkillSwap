@@ -1,0 +1,78 @@
+﻿@using System.Globalization
+@using RDS.Core.Dtos.ServiceOffered
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.SwapCalls" Class="mr-2"/>
+            Fazer Contraproposta
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Class="mb-4">Escolha como você gostaria de responder a esta proposta.</MudText>
+
+        <MudRadioGroup T="CounterOfferType" @bind-Value="_selectedOfferType">
+            <MudRadio T="CounterOfferType" Value="CounterOfferType.ServiceSwap" Color="Color.Primary">Sugerir outra troca de serviço</MudRadio>
+            <MudRadio T="CounterOfferType" Value="CounterOfferType.SkillDolar" Color="Color.Primary">Sugerir pagamento em SkillDólares (SD$)</MudRadio>
+        </MudRadioGroup>
+
+        <div class="mt-4">
+            @if (_selectedOfferType == CounterOfferType.ServiceSwap)
+            {
+                <MudSelect T="long?" @bind-Value="_selectedServiceId" Label="Selecione um serviço do proponente" Variant="Variant.Outlined">
+                    @foreach (var service in ProposerServices)
+                    {
+                        <MudSelectItem T="long?" Value="@service.Id">@service.Title — @service.Price?.ToString("C2", new CultureInfo("pt-BR"))</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                <MudNumericField @bind-Value="_offeredAmount" Label="Valor sugerido em SD$" Variant="Variant.Outlined" Min="1" Adornment="Adornment.Start" AdornmentText="SD$" />
+            }
+        </div>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel">Cancelar</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="@Submit"
+                   Disabled="IsSubmitDisabled()">
+            Enviar Contraproposta
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public IEnumerable<ServiceOfferedDto> ProposerServices { get; set; } = new List<ServiceOfferedDto>();
+
+    private enum CounterOfferType { ServiceSwap, SkillDolar }
+    private CounterOfferType _selectedOfferType = CounterOfferType.ServiceSwap;
+
+    private long? _selectedServiceId;
+    private decimal? _offeredAmount;
+
+    private void Submit()
+    {
+        if (_selectedOfferType == CounterOfferType.ServiceSwap)
+        {
+            MudDialog.Close(DialogResult.Ok(_selectedServiceId));
+        }
+        else
+        {
+            MudDialog.Close(DialogResult.Ok(_offeredAmount));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private bool IsSubmitDisabled()
+    {
+        return _selectedOfferType == CounterOfferType.ServiceSwap
+            ? _selectedServiceId is null or 0
+            : _offeredAmount is null or <= 0;
+    }
+}
